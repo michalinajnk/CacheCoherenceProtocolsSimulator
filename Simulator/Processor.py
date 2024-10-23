@@ -3,10 +3,20 @@ from Cache import Cache
 from typing import Union
 
 class Processor:
-    def __init__(self):
+    def __init__(self, BUS, DATALOADER):
         
         self.cache = Cache(cache_size=1024, block_size=16, associativity=1)
-        self.clock = 0
+        self.exicuteCycle = 0
+        self.BUS = BUS
+        self.DATALOADER = DATALOADER
+        self.idle_cycles = 0
+        
+        # status flag
+        self.stalled = False
+        self.stall_cycles = 0
+        self.completed = False
+        self.instruction = None
+        
         return None
     
     
@@ -43,14 +53,43 @@ class Processor:
         match label:
             case 0:
                 # read value from memory
-                self.update_clock(self.cache.access(value, is_write=False))
+                needToWait = self.cache.access(value, is_write=False)
+                if needToWait >=1:
+                    self.stall_cycles = needToWait
+                    self.stalled = True
                 return 
                 pass
             case 1:
                 # write instruction
-                self.update_clock(self.cache.access(value, is_write=True))
+                needToWait = self.cache.access(value, is_write=True)
+                if needToWait >=1:
+                    self.stall_cycles = needToWait
+                    self.stalled = True
                 pass
             case 2:
                 # other instructions
-                self.update_clock(int(value, 16))
+                # need to stall the processor for `value` cycles
+                self.stall_cycles = int(value,16)
+                self.stalled = True
                 pass
+            
+    def nextTick(self):
+        self.exicuteCycle += 1
+        if not self.stalled and (self.stall_cycles == 0):
+            # parse the next instruction
+            self.instruction = self.DATALOADER.getInstruction()
+            if self.instruction is not None:
+                self.parse_instruction(0, self.instruction[1])
+            else:
+                # instruction is None, simulation is completed
+                self.completed = True
+                
+            
+        elif self.stalled and (self.stall_cycles > 0):
+            self.stall_cycles -= 1
+            if self.stall_cycles == 0:
+                self.stalled = False
+        else:
+            self.idle_cycles += 1
+            
+            

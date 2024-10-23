@@ -46,6 +46,7 @@ class Cache:
                 return 1  # hit, 1 cycle needed
         # miss
         self.replace_block(index, tag, is_write)
+        # need to fetch data from memory, make 
         return 100  # miss, 100 cycles needed to fetch data from memory
 
     def update_lru(self, index, accessed_block):

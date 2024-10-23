@@ -37,3 +37,16 @@ def load_trace_file(dataset_name : str, part_id : int, max_trace = -1):
     print(f'{dataset_name}_{part_id}.data : {len(trace)} trace(s) loaded')
     return trace
 
+class Dataloader:
+    def __init__(self, dataset, part_id):
+        self.trace_data = load_trace_file(dataset, part_id, max_trace=-1)
+        self.current_trace = 0
+    
+    def getInstruction(self):
+        if self.current_trace < len(self.trace_data):
+            self.current_trace += 1
+            return self.trace_data[self.current_trace - 1]
+        # end of trace
+        return None
+                
+
