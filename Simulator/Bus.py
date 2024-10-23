@@ -44,3 +44,10 @@ class Bus:
 
     def get_invalidation_count(self):
         return self.invalidation_count
+    
+    def print_stats(self):
+        print(f"Total data traffic: {self.data_traffic} bytes")
+        print(f"Total transactions: {self.transactions}")
+        print(f"Invalidation requests: {self.invalidation_count}")
+        print(f"Update operations: {self.update_count}")
+        return None

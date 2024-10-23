@@ -27,6 +27,13 @@ while True:
     # print(cycles)
     if PROCESSOR_0.completed:
         break
-    if cycles % 1000000 == 0:
+    if cycles % 10000000 == 0:
         print(f"Current cycle: {cycles}")
 print(f"Simulation completed in {cycles} cycles")
+print("===========processor status===========")
+PROCESSOR_0.print_stats(totalCycles = cycles)
+print("===========cache status===========")
+PROCESSOR_0.cache.print_stats()
+print("===========bus status===========")
+BUS.print_stats()
+# 59335497

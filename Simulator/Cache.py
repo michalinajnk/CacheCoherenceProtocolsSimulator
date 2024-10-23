@@ -1,3 +1,4 @@
+from Bus import *
 class CacheBlock:
     def __init__(self):
         self.valid = False       # is the block valid?
@@ -6,16 +7,31 @@ class CacheBlock:
         self.data = None         # block data
 
 class Cache:
-    def __init__(self, cache_size, block_size, associativity):
+    def __init__(self, cache_size, block_size, associativity, bus):
         # initialize cache parameters
         self.cache_size = cache_size
         self.block_size = block_size
         self.associativity = associativity
         self.num_sets = cache_size // (block_size * associativity)  # set number of cache
+        self.BUS = bus
 
         # initialize cache blocks, each block has a valid bit, tag bits, dirty bit, and data
         self.cache = [[CacheBlock() for _ in range(associativity)] for _ in range(self.num_sets)]
         self.lru_counters = [[0 for _ in range(associativity)] for _ in range(self.num_sets)] # LRU counter
+        
+        # counters
+        self.hitCount = 0
+        self.missCount = 0
+        
+    def print_stats(self):
+        """
+        Prints the statistics of the cache.
+        Returns:
+            None
+        """
+        print(f"Number of hits: {self.hitCount}")
+        print(f"Number of misses: {self.missCount}")
+        return None
 
     def access(self, address, is_write) -> (int):
         """
@@ -43,11 +59,13 @@ class Cache:
                 self.update_lru(index, i)
                 if is_write:
                     block.dirty = True  # if is write operation, set the block as dirty
-                return 1  # hit, 1 cycle needed
+                self.hitCount += 1
+                return 0  # hit, 0 extra stall cycles needed
         # miss
         self.replace_block(index, tag, is_write)
+        self.missCount += 1
         # need to fetch data from memory, make 
-        return 100  # miss, 100 cycles needed to fetch data from memory
+        return 99  # miss, 99 extra cycles needed to fetch data from memory
 
     def update_lru(self, index, accessed_block):
         
@@ -75,4 +93,7 @@ class Cache:
         self.update_lru(index, lru_block_index)
 
     def write_back_to_memory(self, block):
+        # make transaction to write back to memory
+        transaction = Transection(block.tag, self.block_size, "write")
+        self.BUS.send_data(transaction.get_size())
         return 100  # 100 cycles needed to write back to memory

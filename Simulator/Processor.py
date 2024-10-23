@@ -1,21 +1,30 @@
 from Cache import Cache
+import Constants
 
 from typing import Union
 
 class Processor:
     def __init__(self, BUS, DATALOADER):
         
-        self.cache = Cache(cache_size=1024, block_size=16, associativity=1)
+        self.cache = Cache(cache_size=1024, block_size=16, associativity=1, bus=BUS)
         self.exicuteCycle = 0
         self.BUS = BUS
         self.DATALOADER = DATALOADER
+        self.STATUS = None
+        
+        # clock cycle
         self.idle_cycles = 0
+        self.compute_cycles = 0
         
         # status flag
         self.stalled = False
         self.stall_cycles = 0
         self.completed = False
         self.instruction = None
+        
+        # counters
+        self.load_count = 0
+        self.store_count = 0
         
         return None
     
@@ -38,6 +47,19 @@ class Processor:
             int: The current clock cycle.
         """
         return self.clock
+    
+    def print_stats(self, totalCycles):
+        """
+        Prints the statistics of the processor.
+        Returns:
+            None
+        """
+        totalInstructions = self.DATALOADER.getInstructionCount()
+        print(f"Number of load instructions: {self.load_count} ({self.load_count/totalInstructions*100:.2f}%)")
+        print(f"Number of store instructions: {self.store_count} ({self.store_count/totalInstructions*100:.2f}%)")
+        print(f"Number of idle cycles: {self.idle_cycles} ({self.idle_cycles/totalCycles*100:.2f}%)")
+        print(f"Number of compute cycles: {self.compute_cycles} ({self.compute_cycles/totalCycles*100:.2f}%)")
+        return None
 
     def parse_instruction(self, label: int , value: Union[str, int]):
         '''
@@ -55,9 +77,10 @@ class Processor:
                 # read value from memory
                 needToWait = self.cache.access(value, is_write=False)
                 if needToWait >=1:
+                    self.STATUS = Constants.ProcessorStatus.IDEL
                     self.stall_cycles = needToWait
                     self.stalled = True
-                return 
+                self.load_count += 1
                 pass
             case 1:
                 # write instruction
@@ -65,10 +88,12 @@ class Processor:
                 if needToWait >=1:
                     self.stall_cycles = needToWait
                     self.stalled = True
+                self.store_count += 1
                 pass
             case 2:
                 # other instructions
                 # need to stall the processor for `value` cycles
+                self.STATUS = Constants.ProcessorStatus.COMPUTE
                 self.stall_cycles = int(value,16)
                 self.stalled = True
                 pass
@@ -79,16 +104,22 @@ class Processor:
             # parse the next instruction
             self.instruction = self.DATALOADER.getInstruction()
             if self.instruction is not None:
-                self.parse_instruction(0, self.instruction[1])
+                self.parse_instruction(self.instruction[0], self.instruction[1])
             else:
                 # instruction is None, simulation is completed
                 self.completed = True
                 
             
+        elif self.STATUS == Constants.ProcessorStatus.COMPUTE:
+            self.stall_cycles -= 1
+            if self.stall_cycles == 0:
+                self.stalled = False
+            self.compute_cycles += 1
         elif self.stalled and (self.stall_cycles > 0):
             self.stall_cycles -= 1
             if self.stall_cycles == 0:
                 self.stalled = False
+            self.idle_cycles += 1
         else:
             self.idle_cycles += 1
             

@@ -41,6 +41,9 @@ class Dataloader:
     def __init__(self, dataset, part_id):
         self.trace_data = load_trace_file(dataset, part_id, max_trace=-1)
         self.current_trace = 0
+        
+    def getInstructionCount(self):
+        return len(self.trace_data)
     
     def getInstruction(self):
         if self.current_trace < len(self.trace_data):
