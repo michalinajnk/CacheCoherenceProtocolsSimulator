@@ -22,6 +22,8 @@ class Cache:
         # counters
         self.hitCount = 0
         self.missCount = 0
+        self.privateAccess = 0
+        self.publicAccess = 0
         
     def print_stats(self):
         """
@@ -31,6 +33,20 @@ class Cache:
         """
         print(f"Number of hits: {self.hitCount}")
         print(f"Number of misses: {self.missCount}")
+        print(f"Pivate access: {self.privateAccess}")
+        print(f"Public access: {self.publicAccess}")
+        return None
+    
+    def print_config(self):
+        """
+        Prints the configuration of the cache.
+        Returns:
+            None
+        """
+        print(f"Cache size: {self.cache_size} bytes")
+        print(f"Block size: {self.block_size} bytes")
+        print(f"Associativity: {self.associativity}")
+        print(f"Number of sets: {self.num_sets}")
         return None
 
     def access(self, address, is_write) -> (int):
@@ -43,7 +59,7 @@ class Cache:
 
         Returns:
             int: The number of cycles needed for the access. Returns 1 if it is a hit, 
-             and 100 if it is a miss.
+            and 100 if it is a miss.
         """
         # change the address from hex to int
         address = int(address, 16)
@@ -51,6 +67,7 @@ class Cache:
         block_offset = address % self.block_size
         index = (address // self.block_size) % self.num_sets
         tag = address // (self.block_size * self.num_sets)
+        self.privateAccess += 1
 
         # check if the block is in the cache
         for i, block in enumerate(self.cache[index]):
@@ -60,12 +77,12 @@ class Cache:
                 if is_write:
                     block.dirty = True  # if is write operation, set the block as dirty
                 self.hitCount += 1
-                return 0  # hit, 0 extra stall cycles needed
+                return 1  # hit, 0 extra stall cycles needed
         # miss
         self.replace_block(index, tag, is_write)
         self.missCount += 1
         # need to fetch data from memory, make 
-        return 99  # miss, 99 extra cycles needed to fetch data from memory
+        return 100  # miss, 99 extra cycles needed to fetch data from memory
 
     def update_lru(self, index, accessed_block):
         

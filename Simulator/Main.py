@@ -17,18 +17,22 @@ BUS = Bus()
 # make a processor object
 PROCESSOR_0 = Processor(BUS, DATALOADER_0)
 
+print("===========processor configuration===========")
+PROCESSOR_0.cache.print_config()
+
+
 
 # run the simulation
 cycles = 0
-
+print("===========simulation started===========")
 while True:
     PROCESSOR_0.nextTick()
     cycles += 1
     # print(cycles)
     if PROCESSOR_0.completed:
         break
-    if cycles % 10000000 == 0:
-        print(f"Current cycle: {cycles}")
+    # if cycles % 10000000 == 0:
+    #     print(f"Current cycle: {cycles}")
 print(f"Simulation completed in {cycles} cycles")
 print("===========processor status===========")
 PROCESSOR_0.print_stats(totalCycles = cycles)

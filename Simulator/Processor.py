@@ -86,6 +86,7 @@ class Processor:
                 # write instruction
                 needToWait = self.cache.access(value, is_write=True)
                 if needToWait >=1:
+                    self.STATUS = Constants.ProcessorStatus.IDEL
                     self.stall_cycles = needToWait
                     self.stalled = True
                 self.store_count += 1
@@ -115,12 +116,12 @@ class Processor:
             if self.stall_cycles == 0:
                 self.stalled = False
             self.compute_cycles += 1
-        elif self.stalled and (self.stall_cycles > 0):
+        elif self.STATUS == Constants.ProcessorStatus.IDEL:
             self.stall_cycles -= 1
             if self.stall_cycles == 0:
                 self.stalled = False
             self.idle_cycles += 1
         else:
-            self.idle_cycles += 1
+            print("Unknown status")
             
             
