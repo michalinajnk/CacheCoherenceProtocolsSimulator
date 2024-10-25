@@ -77,12 +77,15 @@ class Cache:
                 if is_write:
                     block.dirty = True  # if is write operation, set the block as dirty
                 self.hitCount += 1
-                return 1  # hit, 0 extra stall cycles needed
-        # miss
-        self.replace_block(index, tag, is_write)
+                return 0  # hit, 0 extra stall cycles needed
+        # miss, need to replace the block (if needed) and fetch data from memory
+        # if is write operation, need to write back to memory
+        stall_needed = 100
+        self.BUS.send_data(self.block_size)
+        stall_needed += self.replace_block(index, tag, is_write)
         self.missCount += 1
         # need to fetch data from memory, make 
-        return 100  # miss, 99 extra cycles needed to fetch data from memory
+        return stall_needed - 1 # miss, 99 extra cycles needed to fetch data from memory
 
     def update_lru(self, index, accessed_block):
         
@@ -92,13 +95,14 @@ class Cache:
         self.lru_counters[index][accessed_block] = 0  # if accessed block, reset the counter
 
     def replace_block(self, index, tag, is_write):
+        stall_needed = 0
         # find the least recently used block address and replace it
         lru_block_index = self.lru_counters[index].index(max(self.lru_counters[index]))
         block_to_replace = self.cache[index][lru_block_index]
-
+    
         # if the block is dirty, write back to memory
         if block_to_replace.dirty:
-            self.write_back_to_memory(block_to_replace)
+            stall_needed += self.write_back_to_memory(block_to_replace)
 
         # replace the block
         block_to_replace.valid = True
@@ -108,6 +112,7 @@ class Cache:
 
         # update LRU counters
         self.update_lru(index, lru_block_index)
+        return stall_needed
 
     def write_back_to_memory(self, block):
         # make transaction to write back to memory

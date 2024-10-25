@@ -4,9 +4,9 @@ import Constants
 from typing import Union
 
 class Processor:
-    def __init__(self, BUS, DATALOADER):
+    def __init__(self, cache, BUS, DATALOADER):
         
-        self.cache = Cache(cache_size=1024, block_size=16, associativity=1, bus=BUS)
+        self.cache = cache
         self.exicuteCycle = 0
         self.BUS = BUS
         self.DATALOADER = DATALOADER
