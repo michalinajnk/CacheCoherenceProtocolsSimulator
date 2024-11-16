@@ -40,7 +40,7 @@ class DragonProtocol(CacheProtocol):
         )
 
         if not flags[msg.sender_id]:  # Start from Invalid State
-            if msg.type == MessageType.WRITE_REQ:
+            if msg.message_type == MessageType.WRITE_REQ:
                 if cnt == 0:
                     self.int_to_state_map[msg.sender_id] = StateHandler.modified()
                 else:

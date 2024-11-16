@@ -1,6 +1,5 @@
-# message.py
+
 from enum import Enum, auto
-from CacheAddress import CacheAddress
 
 class MessageType(Enum):
     READ_REQ = auto()

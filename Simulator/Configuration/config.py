@@ -1,8 +1,5 @@
-from psutil import cpu_times
-from sympy.physics.vector import Vector
-
-from Simulator.Configuration.CacheConfig import CacheConfig
-from Simulator.Configuration.TimeConfig import TimeConfig
+from .CacheConfig import CacheConfig
+from .TimeConfig import TimeConfig
 
 
 class Config:
@@ -16,8 +13,6 @@ class Config:
 
     def setProtocl(self, protocol):
         self.protocol = protocol
-
-
 
 
     def setTimeConfig(self, CACHE_HIT,LOAD_BLOCK_FR0M_MEM, WRITE_BACK_MEM, BUS_UPDATE):

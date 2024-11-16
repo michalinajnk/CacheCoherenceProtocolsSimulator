@@ -1,3 +1,5 @@
+
+
 class TimeConfig:
     def __init__(self, cache_hit=10, load_block_from_mem=100, write_back_mem=150, bus_update=50):
         self.cache_hit = cache_hit

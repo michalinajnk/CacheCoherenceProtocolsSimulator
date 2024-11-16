@@ -43,12 +43,12 @@ class Bus:
 
             # Collect information about caches that hold a copy
             for i, cache in enumerate(self.caches):
-                cache_line = cache.cache.get_line_if_present(message.address)
+                cache_line = cache.get_line_if_present(message.address)
                 cache_lines[i] = cache_line
                 if cache_line is not None:
                     flags[i] = True
             #decide new states and apply changes
-            response_time = self.coherence_protocol.process_message(message, flags, cache_lines)
+            response_time = self.coherence_protocol.process_msg(message, flags, cache_lines)
             message.stay_in_bus = response_time
 
             #calculate time in bus before sending reply

@@ -2,21 +2,21 @@ import os
 
 from Simulator.Cache.Cache import Cache
 from Simulator.Configuration.Trace import Trace
-from Simulator.Processor.Observer import Observer
+from .Observer import Observer
 
 
 class Processor(Observer):
     """
     Simulates a processor which processes instructions and interacts with a cache.
     """
-    def __init__(self, processor_id, trace_file_name, cache_configuration, timing_configuration, insts, root_path):
+    def __init__(self, processor_id, trace_file_name, config, root_path):
         self.id = processor_id
         self.halt_cycles = 0
         self.trace_file_path = os.path.join(root_path, f"{trace_file_name}{processor_id}.data")
-        self.cache = Cache(cache_configuration,timing_configuration)
-        self.timing = timing_configuration
+        self.cache = Cache(config,  processor_id)
         self.current_instruction = None
-        self.insts = insts # Manage unique instructions being processed
+        self.trace_file = None
+        self.insts = config.insts # Manage unique instructions being processed
         try:
             self.trace_file = open(self.trace_file_path, 'r')
         except IOError:
@@ -44,17 +44,17 @@ class Processor(Observer):
         if self.current_instruction:
             result = self.current_instruction.execute(self.cache)
             if result:
-                address = self.cache.parse_address(self.current_instruction.get_val())
+                address = self.cache.parse_address(self.current_instruction.get_value())
                 self.insts.remove(address)
             self.current_instruction = None
 
     def process_instruction(self):
-        address = self.cache.parse_address(self.current_instruction.get_val())
+        address = self.cache.parse_address(self.current_instruction.get_value())
         if address in self.insts:
             self.halt_cycles = 0
         else:
             self.insts.add(address)
-            self.halt_cycles = self.current_instruction.detect(self.cache, self.timing)
+            self.halt_cycles = self.current_instruction.detect(self.cache)
             self.halt_cycles -= 1
 
     def __del__(self):
@@ -64,3 +64,6 @@ class Processor(Observer):
 
     def read_cache(self):
         return self.cache
+
+    def set_halt_cycles(self, halt):
+        self.halt_cycles = halt

@@ -25,6 +25,9 @@ class CacheController:
         """
         return self.identifier
 
+    def get_line_if_present(self, address):
+        return self.cache.sets[address.set_index].access_line(address.tag, modify=False)  # Access without modifying
+
     def send_request(self, message):
         """
         Sends a request through the bus.
@@ -34,24 +37,6 @@ class CacheController:
         """
         self.bus.send_request(message)
 
-    def receive_request(self, message):
-        """
-        Handles receiving a request. Placeholder for actual implementation.
-
-        Args:
-            message (Message): The received message.
-        """
-        # This method would have more logic in a full implementation
-        pass
-
-    def send_reply(self, message):
-        """
-        Sends a reply through the bus. Placeholder for actual implementation.
-
-        Args:
-            message (Message): The message to send as a reply.
-        """
-        pass
 
     def receive_reply(self, message):
         """
@@ -61,14 +46,15 @@ class CacheController:
             message (Message): The received reply message.
         """
         # Simulating some response processing
-        needs_write_back = self.cache.check_needs_write_back(message.address)
+        needs_write_back = self.cache.get_sets()[message.address.set_index].need_write_back(message.address)
         if needs_write_back:
             # Assume some handling here that might include pausing or resuming the CPU, etc.
-            self.cache.processor.set_halt(self.cache.time_config.write_back_mem)
+            self.cache.processor.set_halt_cycles(self.cache.time_config.write_back_mem)
         else:
-            self.cache.processor.set_halt(0)
-            if self.cache.processor.get_instruction().get_protocol() in [0, 1]:
+            self.cache.processor.set_halt_cycles(0)
+            if self.cache.processor.current_instruction.identify() in [0, 1]:
                 parse = self.cache.parse_address(self.cache.processor.get_instruction().get_value())
                 assert parse in self.cache.insts  # Simulated check
                 del self.cache.insts[parse]
-            self.cache.processor.clear_instruction()
+            self.cache.processor.insts = None
+

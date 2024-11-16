@@ -33,7 +33,7 @@ class MESIProtocol(CacheProtocol):
         flag = any(flags[i] and caches[i].get_state() == StateHandler.modified() for i in range(self.CPU_NUMS))
 
         if not flags[msg.sender_id]:  # Start from Invalid State
-            if msg.type == MessageType.WRITE_REQ:
+            if msg.message_type == MessageType.WRITE_REQ:
                 if cnt == 0:
                     self.int_to_state_map[msg.sender_id] = StateHandler.shared()
                 else:
@@ -67,7 +67,7 @@ class MESIProtocol(CacheProtocol):
                     return self.CACHE_CONFIG.block_size // 2
 
         # For already flagged senderId with WRITE_REQ
-        elif flags[msg.sender_id] and msg.type == MessageType.WRITE_REQ:
+        elif flags[msg.sender_id] and msg.message_type == MessageType.WRITE_REQ:
             if cnt == 1:
                 # Exclusive or Shared to Modified directly
                 caches[msg.sender_id].set_state(StateHandler.modified())

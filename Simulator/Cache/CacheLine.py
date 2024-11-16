@@ -7,7 +7,7 @@ This class will mimic the behavior of a cache line,
 class CacheLine:
     def __init__(self):
         self.valid = False
-        self.tag = None
+        self.tag = 0
         self.dirty = False
         self.data = None
         self.state = None  #  state for coherence protocol
@@ -18,14 +18,11 @@ class CacheLine:
     def is_valid(self):
         return self.valid
 
-    def get_tag(self):
-        return self.tag
+    def set_valid(self, new_state):
+        self.valid = new_state
 
     def set_dirty(self, dirty):
         self.dirty = dirty
-
-    def get_dirty(self):
-        return self.dirty
 
 
     def update(self, tag, dirty):
