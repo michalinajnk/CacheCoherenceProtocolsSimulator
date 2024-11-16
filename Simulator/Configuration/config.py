@@ -1,0 +1,16 @@
+from Simulator.Configuration.CacheConfig import CacheConfig
+from Simulator.Configuration.TimeConfig import TimeConfig
+
+CPU_NUMS = 4
+CACHE_SIZE = 16
+BLOCK_SIZE = 1024
+ASSOCIATIVITY =  4
+CACHE_HIT = 100
+LOAD_BLOCK_FR0M_MEM = 100
+WRITE_BACK_MEM = 150
+BUS_UPDATE = 50
+
+
+TIME_CONFIG = TimeConfig(CACHE_HIT,LOAD_BLOCK_FR0M_MEM, WRITE_BACK_MEM, BUS_UPDATE)
+CACHE_CONFIG = CacheConfig(CACHE_SIZE, ASSOCIATIVITY,BLOCK_SIZE)
+

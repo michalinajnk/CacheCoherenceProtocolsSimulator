@@ -1,10 +1,6 @@
-from Cache import *
 from DataParser import *
-from Processor import *
-from Log import Logger
-from Bus import *
-
-from tqdm import tqdm
+from Simulator.Processor.Processor import *
+from Simulator.Bus_Logic.Bus import *
 
 print('avaliable datasets:', *DATASETS)
 dataset = 'blackscholes'
