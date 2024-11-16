@@ -9,14 +9,14 @@ class Processor(Observer):
     """
     Simulates a processor which processes instructions and interacts with a cache.
     """
-    def __init__(self, processor_id, trace_file_name, cache_configuration, timing_configuration, root_path):
+    def __init__(self, processor_id, trace_file_name, cache_configuration, timing_configuration, insts, root_path):
         self.id = processor_id
         self.halt_cycles = 0
         self.trace_file_path = os.path.join(root_path, f"{trace_file_name}{processor_id}.data")
         self.cache = Cache(cache_configuration,timing_configuration)
         self.timing = timing_configuration
         self.current_instruction = None
-        self.insts = set()  # Manage unique instructions being processed
+        self.insts = insts # Manage unique instructions being processed
         try:
             self.trace_file = open(self.trace_file_path, 'r')
         except IOError:
@@ -60,3 +60,7 @@ class Processor(Observer):
     def __del__(self):
         if self.trace_file and not self.trace_file.closed:
             self.trace_file.close()
+
+
+    def read_cache(self):
+        return self.cache
