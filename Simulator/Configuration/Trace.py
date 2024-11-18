@@ -61,7 +61,6 @@ class Instruction0(Trace):
         return cache.detect_address(self.address)
 
 
-
 class Instruction1(Trace):
     def execute(self, cache):
         return cache.write_address(self.address)

@@ -35,16 +35,16 @@ def main(argv):
     config.setProtocl(protocol)
 
     timer = Timerr()
-    bus = Bus(protocol)
+    bus = Bus(protocol,config )
     timer.set_bus(bus)
 
 
     for i in range(config.CPU_NUMS):
         cpu = Processor(i, filename, config, root_path=f"{ROOT_PATH_DATA}/{directory}")
-        cpu.read_cache().set_processor(cpu)
+        cpu.cache.set_processor(cpu)
         timer.attach(cpu)
-        controller = CacheController(i, bus, cpu.read_cache())
-        cpu.read_cache().set_controller(controller)
+        controller = CacheController(i, bus, cpu.cache)
+        cpu.cache.set_controller(controller)
         bus.register_cache(controller)
         config.CPU_STATS.append(Statistics())
 

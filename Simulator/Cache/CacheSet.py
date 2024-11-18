@@ -1,7 +1,9 @@
+import threading
 from collections import deque
 from Simulator.Cache.CacheLine import CacheLine
 from Simulator.StateMachine.StateHandler import StateHandler
-
+import logging
+MESI_PROTOCOL = 0
 
 class CacheSet:
     """Manages a set of CacheLine objects, handling insertion, eviction, and state management based on LRU
@@ -10,107 +12,125 @@ class CacheSet:
     def __init__(self, config, associativity, identifier):
         self.associativity = associativity
         self.identifier = identifier
-        self.lines = [CacheLine() for _ in range(associativity)]
-        self.lru_queue = deque(range(associativity))  # Track LRU by index
-        self.tag_to_index = {}  # Maps tags to indices for quick lookup
         self.config = config
-
-    def is_hit(self, tag, modify=False):
-        hit = False
+        self.lock = threading.Lock()
+        self.lines = [CacheLine() for _ in range(associativity)]
+        self.lru_queue = deque(range(associativity))
         for line in self.lines:
-            if line.valid and line.tag == tag:
-                if modify:
-                    line.set_dirty(True)
-                return True
-        return hit
-
-    def is_hit_readonly(self, tag, modify=False):
-        for idx, line in enumerate(self.lines):
-            if line.valid and line.tag == tag:
-                self.config.CPU_STATS[idx].increment("cache_hit")
-                if (line.state == StateHandler.modified()
-                        or line.state == StateHandler.exclusive()):
-                    self.config.CPU_STATS[self.config.CPU_NUMS].increment("private")
-                else:
-                    self.config.CPU_STATS[self.config.CPU_NUMS].increment("public")
-            if self.config.protocol.get_protocol() < 1:
-                if modify and line.dirty == False:
-                    return False
-            elif modify:
-                return False
-            return True
-        return False
-
-
-    def access_line(self, tag, modify=False):
-        """Access a line with the given tag, potentially modifying it if 'modify' is True."""
-        index = self.tag_to_index.get(tag)
-        if index is not None and self.lines[index].is_valid and self.lines[index].tag == tag:
-            self.lru_queue.remove(index)
-            self.lru_queue.appendleft(index)
-            if modify:
-                self.lines[index].set_dirty(True)
-            return self.lines[index]
-        return None
+            line.state = StateHandler.invalid()
+        logging.debug(f"CacheSet initialized with ID={identifier}, associativity={associativity}")
 
     def is_full(self):
-        """Check if all cache lines are valid."""
-        return all(line.is_valid for line in self.lines)
+        """Checks if all lines in the cache set are valid, indicating full capacity."""
+        return all(line.valid for line in self.lines)
+
+    def find_line_index(self, tag):
+        """Finds the index of a line with a specific tag, returns None if not found."""
+        for index, line in enumerate(self.lines):
+            if line.valid and line.tag == tag:
+                return index
+        return None
+
+    def is_hit(self, tag, isWrite=False):
+        """Checks for a cache hit, and optionally modifies the line's state."""
+        with self.lock:
+            line_index = self.find_line_index(tag)
+            if line_index is not None:
+                line = self.lines[line_index]
+                self.lru_queue.remove(line_index)
+                self.lru_queue.appendleft(line_index)
+                logging.info(f"Cache hit: tag={tag}, modify={isWrite}")
+                if isWrite:
+                    line.dirty = True
+                return True
+            logging.info(f"Cache miss: tag={tag}")
+            return False
+
+    def is_hit_msg(self, tag):
+        """Check for a hit and return the line without affecting LRU order."""
+        with self.lock:
+            for line in self.lines:
+                if line.valid and line.tag == tag:
+                    return line
+            return None
+
+    def is_hit_readonly(self, tag, isWrite=False):
+        """Check for a hit without modifying any state, used for const operations."""
+        with self.lock:
+            for line in self.lines:
+                if line.valid and line.tag == tag:
+                    self.config.CPU_STATS[self.identifier].increment("cache_hit")
+                    if line.state == StateHandler.modified() or line.state == StateHandler.exclusive():
+                        self.config.CPU_STATS[self.config.CPU_NUMS].increment("private")
+                    else:
+                        self.config.CPU_STATS[self.config.CPU_NUMS].increment("public")
+                    if self.config.protocol.get_protocol() == MESI_PROTOCOL:
+                        if isWrite and not line.dirty:
+                            return False  # Cannot write if line is not already dirty
+                    elif isWrite:
+                        return False
+                    return True
+            return False
+
 
     def add_or_replace_line(self, tag, is_write):
-        """Add a new line with the given tag, or replace the least recently used one if the set is full."""
-        if len(self.lru_queue) < self.associativity:
-            # There is space to add a new line
-            index = self.lru_queue.pop()  # Use an existing index that is considered least recently used
-            new_line = self.lines[index]
-            new_line.tag = tag
-            new_line.valid = True
-            new_line.dirty = is_write
-            self.lru_queue.appendleft(index)
-            self.tag_to_index[tag] = index
-            return new_line, False  # No eviction happened
-        else:
-            # Replace the least recently used line
-            lru_index = self.lru_queue.pop()
-            evicted_line = self.lines[lru_index]
-            was_dirty = evicted_line.dirty and evicted_line.valid
-            old_tag = evicted_line.tag
-            if old_tag in self.tag_to_index:
-                del self.tag_to_index[old_tag]  # Remove old tag
-            evicted_line.update(tag, is_write)
-            self.lru_queue.appendleft(lru_index)
-            self.tag_to_index[tag] = lru_index
-            return evicted_line, was_dirty
+        """Adds a new line or replaces the least recently used line with new content."""
+        with self.lock:
+            # Always evict or reuse the least recently used line (popped from the end of the LRU queue)
+            lru_index = self.lru_queue.pop()  # Remove the least recently used line
 
+            evicted_line = self.lines[lru_index]
+            evicted_line.tag = tag
+            evicted_line.valid = True
+            evicted_line.dirty = is_write
+            evicted_line.state=StateHandler.invalid()  # Reset state to invalid, coherence protocol will update
+
+            # Update this line to be the most recently used
+            self.lru_queue.appendleft(lru_index)
+            logging.info(f"Cache line updated at index {lru_index}: tag={tag}, write={is_write}")
+
+            return evicted_line
+
+
+    def load_line(self, tag, isWrite):
+        with self.lock:
+            # Check the state constraints based on the protocol
+            for line in self.lines:
+                if line.valid and line.tag == tag:
+                    if isWrite:
+                        assert line.state in [self.config.protocol.intToStringMap[self.identifier].modified()]
+                    if line.state == self.config.protocol.intToStringMap[self.identifier].shared():
+                        assert not isWrite
+
+            if not self.is_full():
+                # Find an invalid line to use
+                for i, line in enumerate(self.lines):
+                    if not line.valid:
+                        line.is_valid = True
+                        line.tag = tag
+                        line.dirty = isWrite
+                        line.state = self.config.protocol.intToStringMap[self.identifier].invalid()
+                        self.lru_queue.remove(i)
+                        self.lru_queue.appendleft(i)
+                        return self.config.TIME_CONFIG.load_block_from_mem
+            else:
+                # Evict the least recently used line
+                lru_index = self.lru_queue.pop()
+                evicted_line = self.lines[lru_index]
+                write_back_cycles = self.config.TIME_CONFIG.write_back_mem if evicted_line.dirty else 0
+                evicted_line.tag = tag
+                evicted_line.dirty = isWrite
+                evicted_line.state = self.config.protocol.intToStringMap[self.identifier].invalid()  # Assume invalid, set later
+                self.lru_queue.appendleft(lru_index)
+                return self.config.TIME_CONFIG.load_block_from_mem + write_back_cycles
+
+            return 0
 
     def need_write_back(self, tag):
-        """
-        Determines if the least recently used line needs to be written back to memory.
-        Args:
-            tag (int): The tag being inserted, used to avoid write-back if it matches the LRU tag.
-        Returns:
-            bool: True if the least recently used line is dirty, valid, and its tag does not match the incoming tag.
-        """
-        if self.is_full():
-            lru_index = self.lru_queue[-1]
-            lru_line = self.lines[lru_index]
-            return lru_line.dirty and lru_line.valid and lru_line.tag != tag
-        return False
-
-
-    def load_line(self, tag, is_write):
-        """Load a line with the specified tag into the cache, handling eviction if necessary."""
-        line, was_dirty = self.add_or_replace_line(tag, is_write)
-        cycles = self.config.TIME_CONFIG.load_block_from_mem
-        if was_dirty:
-            cycles += self.config.TIME_CONFIG.write_back_mem
-        return cycles
-
-    def get_state(self, index):
-        """Get the state of the line at the specified index."""
-        return self.lines[index].state if index < len(self.lines) and self.lines[index].is_valid else None
-
-    def set_state(self, index, state):
-        """Set the state of the line at the specified index."""
-        if index < len(self.lines):
-            self.lines[index].state = state
+        """Determines if the least recently used line needs to be written back before eviction."""
+        with self.lock:
+            if self.is_full():
+                lru_index = self.lru_queue[-1]  # Peek at the least recently used without removing it
+                lru_line = self.lines[lru_index]
+                return lru_line.dirty and lru_line.valid and lru_line.tag != tag
+            return False

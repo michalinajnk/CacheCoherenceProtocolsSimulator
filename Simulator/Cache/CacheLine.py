@@ -1,31 +1,55 @@
-"""
-This class will mimic the behavior of a cache line,
- holding data, a tag, a validity bit, a dirty bit, and  a state for cache protocols
-"""
-
-
 class CacheLine:
-    def __init__(self):
-        self.valid = False
-        self.tag = 0
-        self.dirty = False
-        self.data = None
-        self.state = None  #  state for coherence protocol
+    def __init__(self, tag=0, valid=False, dirty=False, state=None):
+        self._valid = valid
+        self._tag = tag
+        self._dirty = dirty
+        self._state = state
 
-    def set_state(self, new_state):
-        self.state = new_state
+    @property
+    def valid(self):
+        return self._valid
 
-    def is_valid(self):
-        return self.valid
+    @valid.setter
+    def valid(self, value):
+        self._valid = value
 
-    def set_valid(self, new_state):
-        self.valid = new_state
+    @property
+    def tag(self):
+        return self._tag
 
-    def set_dirty(self, dirty):
-        self.dirty = dirty
+    @tag.setter
+    def tag(self, value):
+        self._tag = value
 
+    @property
+    def dirty(self):
+        return self._dirty
 
-    def update(self, tag, dirty):
-        self.valid = True
+    @dirty.setter
+    def dirty(self, value):
+        self._dirty = value
+
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, new_state):
+        self._state = new_state
+
+    def update(self, tag, is_write):
+        """Updates the cache line with new tag and sets the line as valid and potentially dirty."""
         self.tag = tag
-        self.dirty = dirty
+        self.valid = True
+        self.dirty = is_write
+
+    def clear(self):
+        """Resets the cache line to invalid and clean."""
+        self.valid = False
+        self.dirty = False
+        self.tag = 0
+        self.state = None
+
+    def __str__(self):
+        """Provides a simple string representation of the cache line."""
+        return f"Tag: {self.tag}, Valid: {self.valid}, Dirty: {self.dirty}, State: {self.state}"

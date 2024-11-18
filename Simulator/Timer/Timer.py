@@ -47,7 +47,7 @@ class Timerr:
             self.bus.propagate_replies()
 
         # Return True if all observers are active
-        return active_count == len(self.observers)
+        return active_count != len(self.observers)
 
     def set_bus(self, bus):
         """

@@ -8,14 +8,14 @@ class Config:
         self.TIME_CONFIG = None
         self.CACHE_CONFIG = None
         self.protocol = None
-        self.insts = set()
+        self.instructions = set()
         self.CPU_STATS = []
 
     def setProtocl(self, protocol):
         self.protocol = protocol
 
 
-    def setTimeConfig(self, CACHE_HIT,LOAD_BLOCK_FR0M_MEM, WRITE_BACK_MEM, BUS_UPDATE):
+    def setTimeConfig(self, CACHE_HIT, LOAD_BLOCK_FR0M_MEM, WRITE_BACK_MEM, BUS_UPDATE):
         self.TIME_CONFIG = TimeConfig(CACHE_HIT,LOAD_BLOCK_FR0M_MEM, WRITE_BACK_MEM, BUS_UPDATE)
 
 

@@ -1,3 +1,6 @@
+from Simulator.Cache.MessageType import MessageType
+
+
 class CacheController:
     """
     Controls interactions between a cache and its associated bus, handling requests and replies.
@@ -26,7 +29,13 @@ class CacheController:
         return self.identifier
 
     def get_line_if_present(self, address):
-        return self.cache.sets[address.set_index].access_line(address.tag, modify=False)  # Access without modifying
+        """
+        Retrieves a line from the cache if it is present, without modifying it.
+        """
+        index = address.set_index
+        cache_set = self.cache.sets[index]
+        line = cache_set.is_hit_msg(address.tag)
+        return line
 
     def send_request(self, message):
         """
@@ -45,16 +54,30 @@ class CacheController:
         Args:
             message (Message): The received reply message.
         """
-        # Simulating some response processing
-        needs_write_back = self.cache.get_sets()[message.address.set_index].need_write_back(message.address)
-        if needs_write_back:
-            # Assume some handling here that might include pausing or resuming the CPU, etc.
+        # Handle write-back requirements first
+        if self.cache.get_sets()[message.address.set_index].need_write_back(message.address):
             self.cache.processor.set_halt_cycles(self.cache.time_config.write_back_mem)
         else:
             self.cache.processor.set_halt_cycles(0)
-            if self.cache.processor.current_instruction.identify() in [0, 1]:
-                parse = self.cache.parse_address(self.cache.processor.get_instruction().get_value())
-                assert parse in self.cache.insts  # Simulated check
-                del self.cache.insts[parse]
-            self.cache.processor.insts = None
+
+        if message.message_type == MessageType.READ_REQ:
+            # Fetch the data as part of handling a read request
+            self.update_cache(message.address, is_write=False)
+        elif message.message_type == MessageType.WRITE_REQ:
+            self.update_cache(message.address, is_write=True)
+
+        # Clearing the processor's current instruction
+        if self.cache.processor.get_instruction() and self.cache.processor.get_instruction().identify() == 0:
+            parse = self.cache.parse_address(self.cache.processor.get_instruction().get_value())
+            assert parse in self.cache.get_instructions()  # Ensure the instruction is present
+            self.cache.get_instructions().remove(parse)
+            self.cache.processor.set_instruction(None)
+
+    def update_cache(self, address, is_write):
+        """
+        Updates the cache line with the new data fetched from memory.
+        """
+        set_index, tag = self.cache.parse_address(address)
+        cache_set = self.cache.sets[set_index]
+        cache_set.add_or_replace_line(tag, is_write)
 
