@@ -18,7 +18,12 @@ class CacheSet:
         self.lru_queue = deque(range(associativity))
         for line in self.lines:
             line.state = StateHandler.invalid()
+            # line.state = StateHandler.exclusive()
         logging.debug(f"CacheSet initialized with ID={identifier}, associativity={associativity}")
+        
+    def print_cache_line_state(self):
+        for i, line in enumerate(self.lines):
+            print("line", i, "state", line.state)
 
     def is_full(self):
         """Checks if all lines in the cache set are valid, indicating full capacity."""
@@ -83,11 +88,24 @@ class CacheSet:
             evicted_line.tag = tag
             evicted_line.valid = True
             evicted_line.dirty = is_write
+            # evicted_line.state=StateHandler.exclusive()  # Reset state to invalid, coherence protocol will update
             evicted_line.state=StateHandler.invalid()  # Reset state to invalid, coherence protocol will update
 
             # Update this line to be the most recently used
             self.lru_queue.appendleft(lru_index)
             logging.info(f"Cache line updated at index {lru_index}: tag={tag}, write={is_write}")
+            
+            # call the coherence protocol to update the state
+            if self.config.protocol.get_protocol() == 2: # Dragon
+                if is_write:
+                    evicted_line.state = StateHandler.modified()
+                else:
+                    evicted_line.state = StateHandler.shared()
+            elif self.config.protocol.get_protocol() == 0: # MESI
+                if is_write:
+                    evicted_line.state = StateHandler.modified()
+                else:
+                    evicted_line.state = StateHandler.exclusive()
             return evicted_line
 
 
@@ -97,8 +115,9 @@ class CacheSet:
             for line in self.lines:
                 if line.valid and line.tag == tag:
                     if isWrite:
-                        assert line.state in [self.config.protocol.intToStringMap[self.identifier].modified()]
-                    if line.state == self.config.protocol.intToStringMap[self.identifier].shared():
+                        # self.print_cache_line_state()
+                        assert line.state in [StateHandler.modified()]
+                    if line.state == StateHandler.shared() :
                         assert not isWrite
 
             if not self.is_full():
@@ -108,7 +127,7 @@ class CacheSet:
                         line.is_valid = True
                         line.tag = tag
                         line.dirty = isWrite
-                        line.state = self.config.protocol.intToStringMap[self.identifier].invalid()
+                        line.state = StateHandler.invalid()
                         self.lru_queue.remove(i)
                         self.lru_queue.appendleft(i)
                         return self.config.TIME_CONFIG.load_block_from_mem
@@ -119,7 +138,7 @@ class CacheSet:
                 write_back_cycles = self.config.TIME_CONFIG.write_back_mem if evicted_line.dirty else 0
                 evicted_line.tag = tag
                 evicted_line.dirty = isWrite
-                evicted_line.state = self.config.protocol.intToStringMap[self.identifier].invalid()  # Assume invalid, set later
+                evicted_line.state = StateHandler.invalid()  # Assume invalid, set later
                 self.lru_queue.appendleft(lru_index)
                 return self.config.TIME_CONFIG.load_block_from_mem + write_back_cycles
 

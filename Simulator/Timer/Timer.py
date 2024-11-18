@@ -3,9 +3,11 @@ import sys
 
 class Timerr:
     def __init__(self):
-        self.ticks = sys.maxsize
+        # self.ticks = sys.maxsize
+        self.ticks = 0
         self.observers = []  #observers of timer ticks
         self.bus = None
+        self.active_count = 0
 
     def attach(self, observer):
         """
@@ -21,7 +23,7 @@ class Timerr:
         Increment the timer and notify all observers.
 
         Returns:
-            bool: True if all observers are active, False if any observer stops.
+            done (bool): True if all observers are not active, False otherwise.
         """
         self.ticks += 1
         return self.notify(self.ticks)
@@ -34,12 +36,16 @@ class Timerr:
             now (int): Current time tick.
 
         Returns:
-            bool: True if all observers are still active, False if any have completed their tasks.
+            done (bool): True if all observers are not active, False otherwise.
         """
-        active_count = 0
+        self.active_count = 0
         for observer in self.observers:
-            if observer.update(now):
-                active_count += 1
+            still_processing = observer.update(now)
+            # print(observer,"still_processing",still_processing)
+            if still_processing:
+                # print(observer,"still_processing",still_processing, observer.current_instruction)
+                # print(observer.halt_cycles)
+                self.active_count += 1
 
         # Propagate bus requests and replies
         if self.bus:
@@ -47,7 +53,10 @@ class Timerr:
             self.bus.propagate_replies()
 
         # Return True if all observers are active
-        return active_count != len(self.observers)
+        # print(f"current time is {now}, active_count is {self.active_count}")
+        # print(active_count == 0)
+        # return active_count != len(self.observers)
+        return self.active_count == 0
 
     def set_bus(self, bus):
         """

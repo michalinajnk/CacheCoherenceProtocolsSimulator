@@ -28,6 +28,9 @@ class CacheLine:
     @dirty.setter
     def dirty(self, value):
         self._dirty = value
+        
+    def set_dirty(self, value):
+        self._dirty = value
 
     @property
     def state(self):
@@ -53,3 +56,7 @@ class CacheLine:
     def __str__(self):
         """Provides a simple string representation of the cache line."""
         return f"Tag: {self.tag}, Valid: {self.valid}, Dirty: {self.dirty}, State: {self.state}"
+    
+    def get_state(self):
+        return self._state
+    

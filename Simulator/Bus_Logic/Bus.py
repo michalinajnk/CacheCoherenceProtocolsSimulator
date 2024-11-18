@@ -24,7 +24,7 @@ class Bus:
             flags = [False] * len(self.cache_controllers)
             cache_lines = [None] * len(self.cache_controllers)
             if message.stay_in_bus == -1:
-                message.stay_in_bus = self.config.TIME_CONFIG.cache_hit
+                message.stay_in_bus = self.config.TIME_CONFIG.cache_hit 
 
                 for i, cache_controller in enumerate(self.cache_controllers):
                     cache_lines[i] = cache_controller.cache.get_cache_sets()[message.address.set_index].is_hit_msg(message.address.tag)

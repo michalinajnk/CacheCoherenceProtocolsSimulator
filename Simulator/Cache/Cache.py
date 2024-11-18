@@ -23,6 +23,7 @@ class Cache:
                       identifier, self.total_size, self.block_size, self.associativity, self.set_count)
 
     def parse_address(self, address: int) -> tuple:
+        # print("address", address)
         block_offset_bits = int(math.log2(self.block_size))
         set_index_bits = int(math.log2(self.set_count))
         set_index_mask = ((1 << set_index_bits) - 1) << block_offset_bits
@@ -45,7 +46,10 @@ class Cache:
     def write_address(self, address):
         set_index, tag = self.parse_address(address)
         cache_set = self.sets[set_index]
-        line = cache_set.is_hit(tag, True)
+        # line = cache_set.is_hit(tag, True)
+        # line = cache_set.is_hit_readonly(tag, True)
+        line = cache_set.is_hit_msg(tag)
+        # print("line", line)
         if line:
             logging.info(f"Write hit for address {address}; setting line to dirty")
             line.set_dirty(True)
@@ -69,7 +73,8 @@ class Cache:
             message = Message(sender_id=self.controller.identifier, stay_in_bus=-1,
                               address=CacheAddress(tag, set_index), message_type=message_type)
             self.controller.send_request(message) #lock
-            return float('inf')  # Simulates an indefinite delay or very high cost
+            # return float('inf')  # Simulates an indefinite delay or very high cost
+            return 100
 
 
     def set_controller(self, controller):
@@ -89,3 +94,6 @@ class Cache:
     def set_instructions(self, instruction):
         logging.debug(f"Setting new instructions for Cache ID {self.identifier}")
         self.config.instructions = instruction
+
+    def get_state(self):
+        return self.state

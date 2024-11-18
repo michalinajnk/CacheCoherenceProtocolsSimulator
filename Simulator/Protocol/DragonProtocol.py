@@ -120,6 +120,10 @@ class DragonProtocol(CacheProtocol):
                 # do nothing, fall through
                 pass
             else:
+                print("msg.sender_id", msg.sender_id)
+                print("caches[msg.sender_id].get_state()", caches[msg.sender_id].get_state())
+                print("msg.message_type", msg.message_type)
+                print("cnt", cnt)
                 assert False  # never reach here
             return 0
         return self.TIME_CONFIG.load_block_from_mem

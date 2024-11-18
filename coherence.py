@@ -8,7 +8,8 @@ from Simulator.Protocol.DragonProtocol import DragonProtocol
 from Simulator.Protocol.MESIProtocol import MESIProtocol
 from Simulator.Timer.Timer import Timerr
 
-ROOT_PATH_DATA  = r'C:\Users\Michalina\cs4223\Assignment2\CacheCoherenceProtocolsSimulator\Simulator\Data'
+# ROOT_PATH_DATA  = r'C:\Users\Michalina\cs4223\Assignment2\CacheCoherenceProtocolsSimulator\Simulator\Data'
+ROOT_PATH_DATA = '/Users/tsoudibi/Documents/NUS/CS4233/Assignments/fromTeammate/CacheCoherenceProtocolsSimulator/Simulator/Data'
 def main(argv):
     assert len(argv) == 7, "Need  to be 7 arguments passed!"
     config = Config(int(argv[6]))
@@ -51,7 +52,10 @@ def main(argv):
     config.CPU_STATS.append(Statistics())  # For the bus
 
     while True:
-        if not timer.tick():
+        if timer.current_time() % 100000 == 0:
+            print("Current cycle is", timer.current_time(), "active: ", timer.active_count)
+        done = timer.tick()
+        if done:
             break
 
     print("\nEnd of simulation at cycle", timer.current_time(), "...")

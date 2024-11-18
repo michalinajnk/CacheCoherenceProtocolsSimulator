@@ -80,6 +80,9 @@ class Instruction2(Trace):
 
     def identify(self):
         return 2
+    
+    def get_value(self):
+        return self.time
 
     def execute(self, cache):
         return self.time
