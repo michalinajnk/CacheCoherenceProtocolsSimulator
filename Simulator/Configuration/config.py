@@ -19,7 +19,7 @@ class Config:
         self.TIME_CONFIG = TimeConfig(CACHE_HIT,LOAD_BLOCK_FR0M_MEM, WRITE_BACK_MEM, BUS_UPDATE)
 
 
-    def setCacheConfig(self, CACHE_SIZE, ASSOCIATIVITY,BLOCK_SIZE):
+    def setCacheConfig(self, CACHE_SIZE, ASSOCIATIVITY, BLOCK_SIZE):
         self.CACHE_CONFIG = CacheConfig(CACHE_SIZE, ASSOCIATIVITY, BLOCK_SIZE)
 
 

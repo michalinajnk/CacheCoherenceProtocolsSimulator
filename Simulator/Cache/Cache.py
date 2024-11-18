@@ -80,7 +80,7 @@ class Cache:
         logging.debug(f"Setting processor for Cache ID {self.identifier}")
         self.processor = processor
 
-    def get_sets(self):
+    def get_cache_sets(self):
         return self.sets
 
     def get_instructions(self):

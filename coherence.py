@@ -77,4 +77,20 @@ def main(argv):
     return 0
 
 if __name__ == "__main__":
+    import logging
+
+    # Configure logging
+    logging.basicConfig(
+        filename='cache_simulation.log',  # Log file path
+        filemode='w',  # Overwrite the log file on each run
+        level=logging.DEBUG,  # Capture all levels of messages
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Include timestamp
+        datefmt='%Y-%m-%d %H:%M:%S'  # Timestamp format
+    )
+
+    logging.debug("This is a debug message")
+    logging.info("This is an informational message")
+    logging.warning("This is a warning message")
+    logging.error("This is an error message")
+    logging.critical("This is a critical message")
     sys.exit(main(sys.argv))

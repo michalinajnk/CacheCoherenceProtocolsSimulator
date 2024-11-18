@@ -88,7 +88,6 @@ class CacheSet:
             # Update this line to be the most recently used
             self.lru_queue.appendleft(lru_index)
             logging.info(f"Cache line updated at index {lru_index}: tag={tag}, write={is_write}")
-
             return evicted_line
 
 

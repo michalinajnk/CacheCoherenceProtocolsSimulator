@@ -61,7 +61,7 @@ class CacheController:
             message (Message): The received reply message.
         """
         # Handle write-back requirements first
-        if self.cache.get_sets()[message.address.set_index].need_write_back(message.address):
+        if self.cache.get_cache_sets()[message.address.set_index].need_write_back(message.address):
             self.cache.processor.set_halt_cycles(self.cache.time_config.write_back_mem)
         else:
             self.cache.processor.set_halt_cycles(0)
@@ -75,15 +75,15 @@ class CacheController:
         # Clearing the processor's current instruction
         if self.cache.processor.get_instruction() and self.cache.processor.get_instruction().identify() == 0:
             parse = self.cache.parse_address(self.cache.processor.get_instruction().get_value())
-            assert parse in self.cache.get_instructions()  # Ensure the instruction is present
-            self.cache.get_instructions().remove(parse)
+            if  parse in self.cache.get_instructions():  # Ensure the instruction is present
+                self.cache.get_instructions().remove(parse)
             self.cache.processor.set_instruction(None)
 
     def update_cache(self, address, is_write):
         """
         Updates the cache line with the new data fetched from memory.
         """
-        set_index, tag = self.cache.parse_address(address)
+        set_index, tag = self.cache.parse_address(address.to_physical_address(self.cache.block_size, len(self.cache.get_cache_sets())))
         cache_set = self.cache.sets[set_index]
         cache_set.add_or_replace_line(tag, is_write)
 

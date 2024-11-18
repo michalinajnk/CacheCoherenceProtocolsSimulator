@@ -74,8 +74,10 @@ class Processor(Observer):
             self.trace_file.close()
             logging.info("No more instructions; closing file")
         else:
-            logging.debug("Fetched instruction: %s", self.current_instruction)
-            return Trace.create_instruction(line)
+
+            instruction =  Trace.create_instruction(line)
+            logging.debug("Fetched instruction: %s", instruction)
+            return instruction
 
     def process_instruction(self, fetched_instruction):
         with self.instruction_lock:
