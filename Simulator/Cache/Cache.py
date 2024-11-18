@@ -54,6 +54,8 @@ class Cache:
             logging.warning(f"Write miss for address {address}; loading line")
             return self.time_config.cache_hit + cache_set.load_line(tag, True)
 
+
+
     def detect_address(self, address, is_write=False):
         set_index, tag = self.parse_address(address)
         cache_set = self.sets[set_index]
@@ -64,10 +66,11 @@ class Cache:
         else:
             logging.warning(f"Address {address} not found in cache; sending bus request")
             message_type = MessageType.WRITE_REQ if is_write else MessageType.READ_REQ
-            message = Message(sender_id=self.identifier, stay_in_bus=-1,
+            message = Message(sender_id=self.controller.identifier, stay_in_bus=-1,
                               address=CacheAddress(tag, set_index), message_type=message_type)
-            self.controller.send_request(message)
+            self.controller.send_request(message) #lock
             return float('inf')  # Simulates an indefinite delay or very high cost
+
 
     def set_controller(self, controller):
         logging.debug(f"Setting controller for Cache ID {self.identifier}")

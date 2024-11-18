@@ -1,3 +1,5 @@
+import threading
+
 from Simulator.Cache.MessageType import MessageType
 
 
@@ -5,6 +7,7 @@ class CacheController:
     """
     Controls interactions between a cache and its associated bus, handling requests and replies.
     """
+
 
     def __init__(self, identifier, bus, cache):
         """
@@ -18,6 +21,7 @@ class CacheController:
         self.identifier = identifier
         self.bus = bus
         self.cache = cache
+        self.lock = threading.Lock()
 
     def get_id(self):
         """
@@ -26,7 +30,8 @@ class CacheController:
         Returns:
             int: The controller's identifier.
         """
-        return self.identifier
+        with self.lock:
+            return self.identifier
 
     def get_line_if_present(self, address):
         """
@@ -44,7 +49,8 @@ class CacheController:
         Args:
             message (Message): The message to send.
         """
-        self.bus.send_request(message)
+        with self.lock:
+            self.bus.send_request(message)
 
 
     def receive_reply(self, message):

@@ -35,49 +35,71 @@ class MESIProtocol(CacheProtocol):
         if not flags[msg.sender_id]:  # Start from Invalid State
             if msg.message_type == MessageType.WRITE_REQ:
                 if cnt == 0:
-                    self.int_to_state_map[msg.sender_id] = StateHandler.shared()
-                else:
+                    self.int_to_state_map[msg.sender_id] = StateHandler.modified()
+                elif cnt == 1:
                     # Transition to Modified requires invalidation of other caches
                     for i in range(self.CPU_NUMS):
                         if flags[i]:
-                            caches[i].set_state(StateHandler.invalid())
-                            caches[i].set_valid(False)
-                    self.int_to_state_map[msg.sender_id] = StateHandler.modified()
-                    self.cpu_stats[self.CPU_NUMS]['data_traffic'] += self.CACHE_CONFIG.block_size
-                    self.cpu_stats[self.CPU_NUMS]['invalidation'] += 1
+                            cnt -= 1
+                            if flag:
+                                assert caches[i].get_state() == StateHandler.modified()
+
+                            caches[i].state = StateHandler.invalid()
+                            caches[i].valid = False
+                    assert cnt == 0
+                    self.int_to_state_map[msg.sender_id] = StateHandler.invalid()
+                    self.cpu_stats[self.CPU_NUMS].add_many('data_traffic', self.CACHE_CONFIG.block_size)
+                    self.cpu_stats[self.CPU_NUMS].increment('invalidation')
                     return self.CACHE_CONFIG.block_size // 2
-            else:  # READ_REQ
+
+            else:
                 if cnt == 0:
                     self.int_to_state_map[msg.sender_id] = StateHandler.exclusive()
-                elif cnt == 1 and flag:
+                elif cnt == 1:
                     # Transition from Modified to Shared
                     for i in range(self.CPU_NUMS):
                         if flags[i]:
-                            caches[i].set_state(StateHandler.shared())
-                            caches[i].set_dirty(False)  # Reset the dirty bit if Modified
+                            cnt-=1
+                            if flag:
+                                assert caches[i].get_state() == StateHandler.modified()
+                                caches[i].dirty = False  # Reset the dirty bit if Modified
+                            caches[i].state = StateHandler.shared()
+
+                    assert cnt == 0
                     self.int_to_state_map[msg.sender_id] = StateHandler.shared()
-                    return max(self.CACHE_CONFIG.block_size // 2, self.TIME_CONFIG.write_back_mem)
+                    self.cpu_stats[self.CPU_NUMS].add_many('data_traffic', self.CACHE_CONFIG.block_size)
+                    if flag:
+                        return max(self.CACHE_CONFIG.block_size // 2, self.TIME_CONFIG.write_back_mem)
+                    else:
+                        return self.CACHE_CONFIG.block_size // 2
                 else:
+                    assert not flag
                     # All other caches must also transition to Shared
                     for i in range(self.CPU_NUMS):
                         if flags[i]:
-                            caches[i].set_state(StateHandler.shared())
-                    self.int_to_state_map[msg.sender_id] = StateHandler.shared()
-                    self.cpu_stats[self.CPU_NUMS]['data_traffic'] += self.CACHE_CONFIG.block_size
-                    return self.CACHE_CONFIG.block_size // 2
+                            cnt-=1
+                            assert caches[i].get_state() == StateHandler.shared()
 
-        # For already flagged senderId with WRITE_REQ
-        elif flags[msg.sender_id] and msg.message_type == MessageType.WRITE_REQ:
+                    assert cnt == 0
+                    self.int_to_state_map[msg.sender_id] = StateHandler.shared()
+                    self.cpu_stats[self.CPU_NUMS].add_many('data_traffic', self.CACHE_CONFIG.block_size)
+                    return self.CACHE_CONFIG.block_size // 2
+        else:
+            assert flags[msg.sender_id]
+            assert  msg.message_type == MessageType.WRITE_REQ
             if cnt == 1:
                 # Exclusive or Shared to Modified directly
-                caches[msg.sender_id].set_state(StateHandler.modified())
+                assert caches[msg.sender_id].state == StateHandler.exclusive() or caches[msg.sender_id].state == StateHandler.shared()
+                caches[msg.sender_id].state = StateHandler.modified()
             else:
                 # Invalidate others if Shared to Modified
+                assert caches[msg.sender_id].state == StateHandler.shared()
+                caches[msg.sender_id].state = StateHandler.modified()
                 for i in range(self.CPU_NUMS):
                     if i != msg.sender_id and flags[i]:
-                        caches[i].set_state(StateHandler.invalid())
-                        caches[i].set_valid(False)
-                caches[msg.sender_id].set_state(StateHandler.modified())
-                self.cpu_stats[self.CPU_NUMS]['invalidation'] += 1
-
-        return 0  # No additional delay
+                        assert caches[i].get_state() == StateHandler.shared()
+                        caches[i].state=StateHandler.invalid()
+                        caches[i].valid=False
+                self.cpu_stats[self.CPU_NUMS].increment('invalidation')
+            return 0
+        return self.TIME_CONFIG.write_back_mem  # No additional delay
