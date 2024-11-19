@@ -51,38 +51,41 @@ def main(argv):
 
     config.CPU_STATS.append(Statistics())  # For the bus
 
-    while True:
-        all_finished = True
-        if not timer.tick():  # if any processor returns False, it will stop the timer
-            break
-        for processor in processors:
-            if not processor.finished:  # Check each processor's finished status
-                all_finished = False
+    try:
+        while True:
+            all_finished = True
+            if not timer.tick():  # if any processor returns False, it will stop the timer
                 break
-        if all_finished:
-            print("All processors have completed their tasks.")
-            break
-    print("\nEnd of simulation at cycle", timer.current_time(), "...")
+            for processor in processors:
+                if not processor.finished:  # Check each processor's finished status
+                    all_finished = False
+                    break
+            if all_finished:
+                print("All processors have completed their tasks.")
+                break
+        print("\nEnd of simulation at cycle", timer.current_time(), "...")
+    except KeyboardInterrupt:
+        logging.debug(f"Interrupted by the user")
+    finally:
+        for i in range(config.CPU_NUMS):
+            print(f"=== Statistics about CPU {i} ===")
+            print("Finished at cycle", config.CPU_STATS[i].get_count("sum_execution_time"))
+            print("Compute Cycles Number is", config.CPU_STATS[i].get_count("compute_cycles"))
+            print("Load Number:", config.CPU_STATS[i].get_count("load_number"), "Store Number:", config.CPU_STATS[i].get_count("store_number"))
+            idle_cycles = config.CPU_STATS[i].get_count("sum_execution_time") - config.CPU_STATS[i].get_count("compute_cycles")
+            print("Idle Cycles Number is", idle_cycles)
+            if config.CPU_STATS[i].get_count("store_number") + config.CPU_STATS[i].get_count("load_number") > 0:
+                miss_rate = 100 - (config.CPU_STATS[i].get_count("cache_hit") * 100) / (config.CPU_STATS[i].get_count("load_number") + config.CPU_STATS[i].get_count("store_number"))
+                print("Data Cache Miss Rate:", f"{miss_rate}%")
 
-    for i in range(config.CPU_NUMS):
-        print(f"=== Statistics about CPU {i} ===")
-        print("Finished at cycle", config.CPU_STATS[i].get_count("sum_execution_time"))
-        print("Compute Cycles Number is", config.CPU_STATS[i].get_count("compute_cycles"))
-        print("Load Number:", config.CPU_STATS[i].get_count("load_number"), "Store Number:", config.CPU_STATS[i].get_count("store_number"))
-        idle_cycles = config.CPU_STATS[i].get_count("sum_execution_time") - config.CPU_STATS[i].get_count("compute_cycles")
-        print("Idle Cycles Number is", idle_cycles)
-        if config.CPU_STATS[i].get_count("store_number") + config.CPU_STATS[i].get_count("load_number") > 0:
-            miss_rate = 100 - (config.CPU_STATS[i].get_count("cache_hit") * 100) / (config.CPU_STATS[i].get_count("load_number") + config.CPU_STATS[i].get_count("store_number"))
-            print("Data Cache Miss Rate:", f"{miss_rate}%")
+        print("=== Statistics about the Bus ===")
+        print("Data Traffic:", config.CPU_STATS[config.CPU_NUMS].get_count("data_traffic"), "bytes")
+        if config.CPU_STATS[config.CPU_NUMS].get_count("invalidation") != 0:
+            print("Number of Invalidations:", config.CPU_STATS[config.CPU_NUMS].get_count("invalidation"))
+        else:
+            print("Number of Updates:", config.CPU_STATS[config.CPU_NUMS].get_count("update"))
 
-    print("=== Statistics about the Bus ===")
-    print("Data Traffic:", config.CPU_STATS[config.CPU_NUMS].get_count("data_traffic"), "bytes")
-    if config.CPU_STATS[config.CPU_NUMS].get_count("invalidation") != 0:
-        print("Number of Invalidations:", config.CPU_STATS[config.CPU_NUMS].get_count("invalidation"))
-    else:
-        print("Number of Updates:", config.CPU_STATS[config.CPU_NUMS].get_count("update"))
-
-    return 0
+        return 0
 
 if __name__ == "__main__":
     import logging
