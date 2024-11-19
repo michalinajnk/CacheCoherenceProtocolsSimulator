@@ -60,11 +60,13 @@ class CacheController:
         Args:
             message (Message): The received reply message.
         """
-        # Handle write-back requirements first
-        if self.cache.get_cache_sets()[message.address.set_index].need_write_back(message.address):
+        flag = self.cache.get_cache_sets()[message.address.set_index].need_write_back(message.address)
+        if flag:
             self.cache.processor.set_halt_cycles(self.cache.time_config.write_back_mem)
         else:
             self.cache.processor.set_halt_cycles(0)
+            self.cache.processor.get_instruction().execute(self.cache)
+
 
         if message.message_type == MessageType.READ_REQ:
             # Fetch the data as part of handling a read request

@@ -94,36 +94,47 @@ class CacheSet:
     def load_line(self, tag, isWrite):
         with self.lock:
             # Check the state constraints based on the protocol
-            for line in self.lines:
-                if line.valid and line.tag == tag:
-                    if isWrite:
-                        assert line.state in [self.config.protocol.intToStringMap[self.identifier].modified()]
-                    if line.state == self.config.protocol.intToStringMap[self.identifier].shared():
-                        assert not isWrite
-
+            if isWrite:
+                #TODO: DOES NOT  WORK ASSER HERE
+                logging.debug(f"Cache line load: tag={tag}, write={isWrite}")
+                logging.debug(f"int_to_state_map: {self.config.protocol.int_to_state_map}")
+                logging.debug(f"Identifier: {self.identifier}")
+                assert self.config.protocol.int_to_state_map[self.identifier] == StateHandler.modified() or self.config.protocol.int_to_state_map[self.identifier] == StateHandler.owned()
+            if self.config.protocol.int_to_state_map[self.identifier] == StateHandler.shared():
+               assert not isWrite
             if not self.is_full():
                 # Find an invalid line to use
                 for i, line in enumerate(self.lines):
                     if not line.valid:
-                        line.is_valid = True
+                        line.valid = True
                         line.tag = tag
                         line.dirty = isWrite
-                        line.state = self.config.protocol.intToStringMap[self.identifier].invalid()
+                        assert line.state ==StateHandler.invalid()
                         self.lru_queue.remove(i)
                         self.lru_queue.appendleft(i)
-                        return self.config.TIME_CONFIG.load_block_from_mem
+                        if self.identifier in self.config.protocol.int_to_state_map:
+                            line.state = self.config.protocol.int_to_state_map[self.identifier]
+                        if self.config.protocol.int_to_state_map[self.identifier] == StateHandler.shared():
+                            assert not line.dirty
+                        self.config.protocol.int_to_state_map.pop(self.identifier)
+                    return self.config.TIME_CONFIG.load_block_from_mem
             else:
-                # Evict the least recently used line
                 lru_index = self.lru_queue.pop()
                 evicted_line = self.lines[lru_index]
-                write_back_cycles = self.config.TIME_CONFIG.write_back_mem if evicted_line.dirty else 0
-                evicted_line.tag = tag
-                evicted_line.dirty = isWrite
-                evicted_line.state = self.config.protocol.intToStringMap[self.identifier].invalid()  # Assume invalid, set later
+                write_back = evicted_line.dirty
+                assert  self.lines[lru_index].valid == True
+                self.lines[lru_index].tag = tag
+                self.lines[lru_index].dirty = isWrite
                 self.lru_queue.appendleft(lru_index)
-                return self.config.TIME_CONFIG.load_block_from_mem + write_back_cycles
-
+                if self.config.protocol.int_to_state_map[self.identifier] == StateHandler.shared():
+                    assert not self.lines[lru_index].dirty
+                self.config.protocol.int_to_state_map.pop(self.identifier)
+                if write_back:
+                    return self.config.TIME_CONFIG.load_block_from_mem + self.config.TIME_CONFIG.write_block_from_mem
+                else:
+                    return self.config.TIME_CONFIG.load_block_from_mem
             return 0
+
 
     def need_write_back(self, tag):
         """Determines if the least recently used line needs to be written back before eviction."""

@@ -3,7 +3,7 @@ import sys
 
 class Timerr:
     def __init__(self):
-        self.ticks = sys.maxsize
+        self.ticks = 0
         self.observers = []  #observers of timer ticks
         self.bus = None
 
@@ -36,18 +36,18 @@ class Timerr:
         Returns:
             bool: True if all observers are still active, False if any have completed their tasks.
         """
-        active_count = 0
+        inactive_count = 0
         for observer in self.observers:
-            if observer.update(now):
-                active_count += 1
+            if not observer.update(now):
+                inactive_count += 1
 
         # Propagate bus requests and replies
         if self.bus:
             self.bus.propagate_requests()
             self.bus.propagate_replies()
 
-        # Return True if all observers are active
-        return active_count != len(self.observers)
+        # Return False if any observers are inactive
+        return inactive_count == 0
 
     def set_bus(self, bus):
         """

@@ -19,6 +19,8 @@ class Cache:
         self.set_count = self.total_size // (self.block_size * self.associativity)
         self.sets = [CacheSet(config, self.associativity, self.identifier) for _ in range(self.set_count)]
         self.time_config = config.TIME_CONFIG
+        self.controller = None
+        self.processor = None
         logging.debug("Cache initialized with ID %s, Total Size %s, Block Size %s, Associativity %s, Set Count %s",
                       identifier, self.total_size, self.block_size, self.associativity, self.set_count)
 
@@ -48,13 +50,15 @@ class Cache:
         line = cache_set.is_hit(tag, True)
         if line:
             logging.info(f"Write hit for address {address}; setting line to dirty")
-            line.set_dirty(True)
+            line.dirty =True
             return self.time_config.cache_hit
         else:
             logging.warning(f"Write miss for address {address}; loading line")
             return self.time_config.cache_hit + cache_set.load_line(tag, True)
 
-
+    def send_block_via_bus(self, block_size_words):
+        # Simulating sending a block of N words via bus
+        return 2 * block_size_words
 
     def detect_address(self, address, is_write=False):
         set_index, tag = self.parse_address(address)
@@ -69,7 +73,8 @@ class Cache:
             message = Message(sender_id=self.controller.identifier, stay_in_bus=-1,
                               address=CacheAddress(tag, set_index), message_type=message_type)
             self.controller.send_request(message) #lock
-            return float('inf')  # Simulates an indefinite delay or very high cost
+            stall_time = self.send_block_via_bus(self.config.words_per_block())   # Simulates an indefinite delay or very high cost
+            return stall_time
 
 
     def set_controller(self, controller):

@@ -30,7 +30,7 @@ class MESIProtocol(CacheProtocol):
         cnt = sum(flags)  # Count how many caches hold a copy
 
         # Check if there is a modified state in any cache
-        flag = any(flags[i] and caches[i].get_state() == StateHandler.modified() for i in range(self.CPU_NUMS))
+        flag = any(flags[i] and caches[i].state == StateHandler.modified() for i in range(self.CPU_NUMS))
 
         if not flags[msg.sender_id]:  # Start from Invalid State
             if msg.message_type == MessageType.WRITE_REQ:
@@ -42,7 +42,7 @@ class MESIProtocol(CacheProtocol):
                         if flags[i]:
                             cnt -= 1
                             if flag:
-                                assert caches[i].get_state() == StateHandler.modified()
+                                assert caches[i].state == StateHandler.modified()
 
                             caches[i].state = StateHandler.invalid()
                             caches[i].valid = False
@@ -61,7 +61,7 @@ class MESIProtocol(CacheProtocol):
                         if flags[i]:
                             cnt-=1
                             if flag:
-                                assert caches[i].get_state() == StateHandler.modified()
+                                assert caches[i].state == StateHandler.modified()
                                 caches[i].dirty = False  # Reset the dirty bit if Modified
                             caches[i].state = StateHandler.shared()
 
@@ -78,14 +78,14 @@ class MESIProtocol(CacheProtocol):
                     for i in range(self.CPU_NUMS):
                         if flags[i]:
                             cnt-=1
-                            assert caches[i].get_state() == StateHandler.shared()
+                            assert caches[i].state == StateHandler.shared()
 
                     assert cnt == 0
                     self.int_to_state_map[msg.sender_id] = StateHandler.shared()
                     self.cpu_stats[self.CPU_NUMS].add_many('data_traffic', self.CACHE_CONFIG.block_size)
                     return self.CACHE_CONFIG.block_size // 2
         else:
-            assert flags[msg.sender_id]
+            assert flag[msg.sender_id]
             assert  msg.message_type == MessageType.WRITE_REQ
             if cnt == 1:
                 # Exclusive or Shared to Modified directly
@@ -97,7 +97,7 @@ class MESIProtocol(CacheProtocol):
                 caches[msg.sender_id].state = StateHandler.modified()
                 for i in range(self.CPU_NUMS):
                     if i != msg.sender_id and flags[i]:
-                        assert caches[i].get_state() == StateHandler.shared()
+                        assert caches[i].state == StateHandler.shared()
                         caches[i].state=StateHandler.invalid()
                         caches[i].valid=False
                 self.cpu_stats[self.CPU_NUMS].increment('invalidation')

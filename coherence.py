@@ -37,7 +37,7 @@ def main(argv):
     timer = Timerr()
     bus = Bus(protocol,config )
     timer.set_bus(bus)
-
+    processors = []
 
     for i in range(config.CPU_NUMS):
         cpu = Processor(i, filename, config, root_path=f"{ROOT_PATH_DATA}/{directory}")
@@ -47,13 +47,21 @@ def main(argv):
         cpu.cache.set_controller(controller)
         bus.register_cache(controller)
         config.CPU_STATS.append(Statistics())
+        processors.append(cpu)
 
     config.CPU_STATS.append(Statistics())  # For the bus
 
     while True:
-        if not timer.tick():
+        all_finished = True
+        if not timer.tick():  # if any processor returns False, it will stop the timer
             break
-
+        for processor in processors:
+            if not processor.finished:  # Check each processor's finished status
+                all_finished = False
+                break
+        if all_finished:
+            print("All processors have completed their tasks.")
+            break
     print("\nEnd of simulation at cycle", timer.current_time(), "...")
 
     for i in range(config.CPU_NUMS):

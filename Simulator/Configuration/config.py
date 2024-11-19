@@ -10,6 +10,12 @@ class Config:
         self.protocol = None
         self.instructions = set()
         self.CPU_STATS = []
+        self.size_of_word = 4  # each word is 4 byte
+
+
+
+    def words_per_block(self):
+        return self.CACHE_CONFIG.block_size / self.size_of_word
 
     def setProtocl(self, protocol):
         self.protocol = protocol
