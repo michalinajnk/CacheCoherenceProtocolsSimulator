@@ -53,7 +53,7 @@ class Timerr:
             self.bus.propagate_replies()
 
         # Return True if all observers are active
-        # print(f"current time is {now}, active_count is {self.active_count}")
+        print(f"current time is {now}, active_count is {self.active_count}")
         # print(active_count == 0)
         # return active_count != len(self.observers)
         return self.active_count == 0
