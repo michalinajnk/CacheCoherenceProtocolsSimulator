@@ -12,7 +12,7 @@ class DragonProtocol(CacheProtocol):
         self.TIME_CONFIG = config.TIME_CONFIG
 
     def get_protocol(self):
-        return 2  # Ensuring protocol identification matches with C++
+        return 1
 
     def process_msg(self, msg, flags, caches):
         cnt = sum(flags)
