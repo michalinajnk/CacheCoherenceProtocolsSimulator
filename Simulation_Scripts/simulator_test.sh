@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-PYTHON_SCRIPT="C:\Users\Michalina\cs4223\Assignment2\CacheCoherenceProtocolsSimulator\Simulator\coherence.py"
+PYTHON_SCRIPT="C:\Users\Michalina\cs4223\Assignment2\CacheCoherenceProtocolsSimulator\coherence.py"
 
 echo "===blackscholes==="
 

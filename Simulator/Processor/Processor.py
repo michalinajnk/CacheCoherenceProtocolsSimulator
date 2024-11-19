@@ -105,7 +105,7 @@ class Processor(Observer):
             self.config.CPU_STATS[self.id].set_count("sum_execution_time", current_cycle)
             self.trace_file.close()
             self.finished = True
-            return True
+            return False
 
         logging.debug("Processor %s: Update concluded for cycle %s", self.id, current_cycle)
         return True  # Default return to keep the simulation running
