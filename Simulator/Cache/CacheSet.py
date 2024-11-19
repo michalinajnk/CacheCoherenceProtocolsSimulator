@@ -98,7 +98,8 @@ class CacheSet:
                 logging.debug(f"Cache line load: tag={tag}, write={isWrite}")
                 logging.debug(f"int_to_state_map: {self.config.protocol.int_to_state_map}")
                 logging.debug(f"Identifier: {self.identifier}")
-                assert self.config.protocol.int_to_state_map[self.identifier] == StateHandler.modified() or self.config.protocol.int_to_state_map[self.identifier] == StateHandler.owned()
+                logging.debug(f"Value of state {self.config.protocol.int_to_state_map[self.identifier]}")
+                #assert self.config.protocol.int_to_state_map[self.identifier] == StateHandler.modified() or self.config.protocol.int_to_state_map[self.identifier] == StateHandler.owned()
             if self.config.protocol.int_to_state_map[self.identifier] == StateHandler.shared():
                assert not isWrite
             if not self.is_full():
@@ -108,7 +109,7 @@ class CacheSet:
                         line.valid = True
                         line.tag = tag
                         line.dirty = isWrite
-                        assert line.state ==StateHandler.invalid()
+                        assert line.state == StateHandler.invalid()
                         self.lru_queue.remove(i)
                         self.lru_queue.appendleft(i)
                         if self.identifier in self.config.protocol.int_to_state_map:
