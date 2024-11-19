@@ -50,10 +50,9 @@ class Cache:
         line = cache_set.is_hit(tag, True)
         if line:
             logging.info(f"Write hit for address {address}; setting line to dirty")
-            line.dirty =True
             return self.time_config.cache_hit
         else:
-            logging.warning(f"Write miss for address {address}; loading line")
+            logging.warning(f"Write miss for address {address} == {set_index, tag}; loading line")
             return self.time_config.cache_hit + cache_set.load_line(tag, True)
 
     def send_block_via_bus(self, block_size_words):

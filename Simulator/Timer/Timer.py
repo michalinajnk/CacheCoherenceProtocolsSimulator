@@ -1,3 +1,4 @@
+import logging
 from typing import List
 import sys
 
@@ -46,6 +47,7 @@ class Timerr:
             self.bus.propagate_requests()
             self.bus.propagate_replies()
 
+        logging.debug(f"current time is {now}, active_count is {inactive_count}")
         # Return False if any observers are inactive
         return inactive_count == 0
 

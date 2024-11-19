@@ -19,6 +19,9 @@ class Processor(Observer):
         self.instruction_lock = threading.Lock()
         self.config = config
         self.finished = False
+        self.max_instruction = 1000
+        self.instruction_count = 0
+
         try:
             self.trace_file = open(self.trace_file_path, 'r')
             logging.info("Successfully opened trace file: %s", self.trace_file_path)
@@ -27,33 +30,62 @@ class Processor(Observer):
             raise
 
     def update(self, current_cycle):
-        logging.debug("Updating processor state for cycle %s", current_cycle)
+        logging.debug("Processor %s: Starting update for cycle %s", self.id, current_cycle)
+
         fetched_instruction = self.fetch_instruction()
         if self.halt_cycles == 0:
             if self.current_instruction is not None:
                 with self.instruction_lock:
-                    address = self.cache.parse_address(self.current_instruction.get_value())
-                    if address in self.currently_processing_instructions:
-                        self.config.CPU_STATS[self.id].increment("idle_cycles")
-                        return True
-                    else:
-                        self.currently_processing_instructions.add(address)
-                        self.halt_cycles = self.current_instruction.detect(self.cache)
-                        self.halt_cycles -= 1
+                    if self.current_instruction.identify() == 2:
+                        self.halt_cycles = self.current_instruction.get_value()
+                        self.halt_cycles -=1
                         self.config.CPU_STATS[self.id].increment("idle_cycles")
                         if self.halt_cycles == 0 and self.current_instruction is not None:
                             self.current_instruction.execute(self.cache)
-                            self.currently_processing_instructions.remove(address)
                             self.current_instruction = None
                         return True
+                    else: #inst 0 or 1
+                        address = self.cache.parse_address(self.current_instruction.get_value())
+                        logging.debug("Processor %s: Parsed address %s from current instruction at cycle %s", self.id,
+                                  address, current_cycle)
+                        if address in self.currently_processing_instructions:
+                            self.config.CPU_STATS[self.id].increment("idle_cycles")
+                            logging.debug("Processor %s: Address %s is already being processed, incrementing idle_cycles at cycle %s",self.id, address, current_cycle)
+                            return True
+                        else:
+                            self.currently_processing_instructions.add(address)
+                            self.halt_cycles = self.current_instruction.detect(self.cache)
+                            self.halt_cycles -= 1
+                            self.config.CPU_STATS[self.id].increment("idle_cycles")
+                            logging.debug(
+                                "Processor %s: Detected new instruction, updated halt_cycles to %s, incremented idle_cycles at cycle %s",
+                                self.id, self.halt_cycles, current_cycle)
 
+                            if self.halt_cycles == 0 and self.current_instruction is not None:
+                                self.current_instruction.execute(self.cache)
+                                self.currently_processing_instructions.remove(address)
+                                self.current_instruction = None
+                                logging.debug(
+                                    "Processor %s: Executed and cleared current instruction, removed address from processing at cycle %s",
+                                    self.id, current_cycle)
+                            return True
+
+            logging.debug("Processor %s: Fetched instruction %s at cycle %s", self.id, fetched_instruction, current_cycle)
             if fetched_instruction:
                 if self.process_instruction(fetched_instruction):
-                    return True  # If instruction was processed, update can conclude successfully for this cycle
+                    logging.debug("Processor %s: Processed fetched instruction at cycle %s", self.id, current_cycle)
+                    return True
+            else:
+                return False
+
         else:
             with self.instruction_lock:
                 self.halt_cycles -= 1
                 self.config.CPU_STATS[self.id].increment("idle_cycles")
+                logging.debug(
+                    "Processor %s: In halt state, decremented halt_cycles to %s, incremented idle_cycles at cycle %s",
+                    self.id, self.halt_cycles, current_cycle)
+
                 if self.halt_cycles == 0 and self.current_instruction is not None:
                     self.current_instruction.execute(self.cache)
                     if self.current_instruction.identify() in [0, 1]:
@@ -61,18 +93,31 @@ class Processor(Observer):
                         assert address in self.currently_processing_instructions
                         self.currently_processing_instructions.remove(address)
                     self.current_instruction = None
+                    logging.debug("Processor %s: Executed current instruction and reset it at cycle %s", self.id,
+                                  current_cycle)
+                    return True
+                if self.halt_cycles > 0:
                     return True
 
         if not fetched_instruction and self.current_instruction is None:
-            logging.debug(f"Cpu {self.id} has finished all instructions at cycle {current_cycle}")
+            logging.debug("Processor %s: No instructions left to process, marking processor as finished at cycle %s",
+                          self.id, current_cycle)
             self.config.CPU_STATS[self.id].set_count("sum_execution_time", current_cycle)
             self.trace_file.close()
-            self.finished = True  # Set a flag indicating this processor is done
-            return True  # Return True to allow other processors to continue
+            self.finished = True
+            return True
+
+        logging.debug("Processor %s: Update concluded for cycle %s", self.id, current_cycle)
         return True  # Default return to keep the simulation running
 
 
     def fetch_instruction(self):
+        self.instruction_count += 1
+        if self.instruction_count > self.max_instruction:
+            logging.info("Max number of instructions reached; closing file")
+            self.trace_file.close()
+            return None
+
         line = self.trace_file.readline()
         if not line:
             self.trace_file.close()
@@ -82,6 +127,7 @@ class Processor(Observer):
             instruction =  Trace.create_instruction(line)
             logging.debug("Fetched instruction: %s", instruction)
             return instruction
+
 
     def process_instruction(self, fetched_instruction):
         with self.instruction_lock:
@@ -97,6 +143,7 @@ class Processor(Observer):
                     self.current_instruction = fetched_instruction
                     self.config.CPU_STATS[self.id].increment("idle_cycles")
                     return True
+                logging.info("Adding the address to currently processing addresses %s", address)
                 self.currently_processing_instructions.add(address)
                 logging.info("Processing new instruction at address %s", address)
             else:
@@ -137,4 +184,3 @@ class Processor(Observer):
 
     def get_instruction(self):
         return self.current_instruction
-

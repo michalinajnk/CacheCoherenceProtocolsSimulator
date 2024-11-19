@@ -95,7 +95,6 @@ class CacheSet:
         with self.lock:
             # Check the state constraints based on the protocol
             if isWrite:
-                #TODO: DOES NOT  WORK ASSER HERE
                 logging.debug(f"Cache line load: tag={tag}, write={isWrite}")
                 logging.debug(f"int_to_state_map: {self.config.protocol.int_to_state_map}")
                 logging.debug(f"Identifier: {self.identifier}")
@@ -130,7 +129,7 @@ class CacheSet:
                     assert not self.lines[lru_index].dirty
                 self.config.protocol.int_to_state_map.pop(self.identifier)
                 if write_back:
-                    return self.config.TIME_CONFIG.load_block_from_mem + self.config.TIME_CONFIG.write_block_from_mem
+                    return self.config.TIME_CONFIG.load_block_from_mem + self.config.TIME_CONFIG.write_back_mem
                 else:
                     return self.config.TIME_CONFIG.load_block_from_mem
             return 0

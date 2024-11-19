@@ -122,7 +122,11 @@ class DragonProtocol(CacheProtocol):
                 # do nothing, fall through
                 pass
             else:
-                assert False  # never reach here
+                logging.debug(f"id of sender of a message: {msg.sender_id}")
+                logging.debug(f"caches[msg.sender_id].get_state(): {caches[msg.sender_id].state}")
+                logging.debug(f"msg.message_type: {msg.message_type}")
+                logging.debug(f"How many common copies of cache: {cnt}")
+                #assert false
             return 0
         return self.TIME_CONFIG.load_block_from_mem
 
@@ -133,11 +137,13 @@ class DragonProtocol(CacheProtocol):
             if flags[i]:
                 if has_modified or has_shared_modified:
                     caches[i].dirty = False
-                caches[i].state = StateHandler.shared()
-
+                if caches[i] is not None:
+                    caches[i].state = StateHandler.shared()
+                else:
+                    logging.debug(f"id of sender of a message: {msg.sender_id}, caches[{i}] was None")
         self.int_to_state_map[msg.sender_id] = StateHandler.owned()
-        self.cpu_stats["updates"] += 1
-        self.cpu_stats["data_traffic"] += self.CACHE_CONFIG.block_size + 4
+        self.cpu_stats[self.CPU_NUMS].increment("update")
+        self.cpu_stats[self.CPU_NUMS].add_many("data_traffic", self.CACHE_CONFIG.block_size + 4)
 
 
     def set_all_to_shared_clean(self, flags, caches,  msg,  cnt):
@@ -154,5 +160,6 @@ class DragonProtocol(CacheProtocol):
         self.int_to_state_map[msg.sender_id]  = StateHandler.owned()
         self.cpu_stats[self.CPU_NUMS].increment("update")
         self.cpu_stats[self.CPU_NUMS].add_many("data_traffic", self.CACHE_CONFIG.block_size + 4 * cnt)
+
 
 

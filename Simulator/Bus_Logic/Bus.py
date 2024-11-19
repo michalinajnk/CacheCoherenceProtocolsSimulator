@@ -32,6 +32,7 @@ class Bus:
                     cache_lines[i] = cache_sets[message.address.set_index].is_hit_msg(message.address.tag)
                     if cache_lines[i] is not None:
                         flags[i]  = True
+                logging.debug(f"Cache lines passed to the process meddage method of coherence protocol{[line for line in cache_lines]}")
                 message.stay_in_bus += self.coherence_protocol.process_msg(message, flags, cache_lines)
 
             message.stay_in_bus -=1
