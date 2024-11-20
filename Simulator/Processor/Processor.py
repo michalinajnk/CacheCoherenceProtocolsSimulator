@@ -71,11 +71,13 @@ class Processor(Observer):
                             return True
 
             logging.debug("Processor %s: Fetched instruction %s at cycle %s", self.id, fetched_instruction, current_cycle)
+            if not fetched_instruction:
+                fetched_instruction = self.fetch_instruction()
             if fetched_instruction:
                 if self.process_instruction(fetched_instruction):
                     logging.debug("Processor %s: Processed fetched instruction at cycle %s", self.id, current_cycle)
                     return True
-            else:
+            elif not self.current_instruction:
                 return False
 
         else:
@@ -103,27 +105,25 @@ class Processor(Observer):
             logging.debug("Processor %s: No instructions left to process, marking processor as finished at cycle %s",
                           self.id, current_cycle)
             self.config.CPU_STATS[self.id].set_count("sum_execution_time", current_cycle)
-            self.trace_file.close()
-            self.finished = True
-            return False
+            if not fetched_instruction:
+                fetched_instruction = self.fetch_instruction()
+            if fetched_instruction:
+                if self.process_instruction(fetched_instruction):
+                    logging.debug("Processor %s: Processed fetched instruction at cycle %s", self.id, current_cycle)
+                    return True
+            elif not self.current_instruction:
+                return False
 
         logging.debug("Processor %s: Update concluded for cycle %s", self.id, current_cycle)
         return True  # Default return to keep the simulation running
 
 
     def fetch_instruction(self):
-        self.instruction_count += 1
-        if self.instruction_count > self.max_instruction:
-            logging.info("Max number of instructions reached; closing file")
-            self.trace_file.close()
-            return None
-
         line = self.trace_file.readline()
         if not line:
             self.trace_file.close()
             logging.info("No more instructions; closing file")
         else:
-
             instruction =  Trace.create_instruction(line)
             logging.debug("Fetched instruction: %s", instruction)
             return instruction
@@ -131,6 +131,7 @@ class Processor(Observer):
 
     def process_instruction(self, fetched_instruction):
         with self.instruction_lock:
+            self.current_instruction = fetched_instruction
             if fetched_instruction.identify() in [0,1] :
                 if fetched_instruction.identify() == 0:
                     self.config.CPU_STATS[self.id].increment("load_number")
@@ -140,7 +141,6 @@ class Processor(Observer):
                 if address in self.currently_processing_instructions:
                     logging.debug("Address %s is currently being processed; skipping", address)
                     self.halt_cycles = 0
-                    self.current_instruction = fetched_instruction
                     self.config.CPU_STATS[self.id].increment("idle_cycles")
                     return True
                 logging.info("Adding the address to currently processing addresses %s", address)
@@ -149,7 +149,6 @@ class Processor(Observer):
             else:
                 self.config.CPU_STATS[self.id].add_many("compute_cycles" , fetched_instruction.get_value())
             self.halt_cycles = fetched_instruction.detect(self.cache)
-            self.current_instruction = fetched_instruction
             self.halt_cycles -= 1
             self.config.CPU_STATS[self.id].increment("idle_cycles")
             if self.halt_cycles == 0 and self.current_instruction is not None:
@@ -183,4 +182,12 @@ class Processor(Observer):
             self.current_instruction = instruction
 
     def get_instruction(self):
-        return self.current_instruction
+        if self.current_instruction is not None:
+            logging.debug('Current instruction is set!!')
+            return self.current_instruction
+        else:
+            logging.debug('Current instruction is None, we need to fetch instruction!!')
+            self.current_instruction = self.fetch_instruction()
+            logging.debug('Current instruction should be set now after fetching and setting')
+            logging.debug(f'Current instruction is {str(self.current_instruction)}')
+            return self.current_instruction

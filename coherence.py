@@ -53,9 +53,11 @@ def main(argv):
 
     try:
         while True:
-            all_finished = True
+
             if not timer.tick():  # if any processor returns False, it will stop the timer
                 break
+
+            all_finished = True
             for processor in processors:
                 if not processor.finished:  # Check each processor's finished status
                     all_finished = False
@@ -64,6 +66,8 @@ def main(argv):
                 print("All processors have completed their tasks.")
                 break
         print("\nEnd of simulation at cycle", timer.current_time(), "...")
+    except Exception as e:
+        logging.error(f"An error occurred during simulation: {str(e)}, {str(e.__traceback__)}, {e.__str__()}")
     except KeyboardInterrupt:
         logging.debug(f"Interrupted by the user")
     finally:
