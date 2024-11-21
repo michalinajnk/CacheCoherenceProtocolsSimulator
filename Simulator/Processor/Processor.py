@@ -30,6 +30,7 @@ class Processor(Observer):
             raise
 
     def update(self, current_cycle):
+        self.config.CPU_STATS[self.id].set_count("sum_execution_time", current_cycle)
         logging.debug("Processor %s: Starting update for cycle %s", self.id, current_cycle)
 
         fetched_instruction = self.fetch_instruction()

@@ -54,7 +54,7 @@ class DragonProtocol(CacheProtocol):
                         self.cpu_stats[self.CPU_NUMS].add_many("data_traffic", self.CACHE_CONFIG.block_size)
                     else: # E,S
                         for i in range(self.CPU_NUMS):
-                            if flags[i]:
+                            if flags[i] and caches[i]:
                                 cnt -=  1
                                 assert (caches[i].state == StateHandler.exclusive()
                                         or caches[i].state == StateHandler.shared())
@@ -67,7 +67,7 @@ class DragonProtocol(CacheProtocol):
                 else: #shared or shared+ow
                     assert has_modified == False
                     for i in range(self.CPU_NUMS):
-                        if flags[i]:
+                        if flags[i] and caches[i]:
                             cnt -= 1
                             assert (caches[i].state == StateHandler.shared() or
                                     caches[i].state == StateHandler.owned())
@@ -90,7 +90,7 @@ class DragonProtocol(CacheProtocol):
                     caches[msg.sender_id].state = StateHandler.modified()
                 else:  # SharedClean to SharedModified, others need to be updated and transfer to SharedClean
                     for i in range(self.CPU_NUMS):
-                        if i != msg.sender_id and flags[i]:
+                        if i != msg.sender_id and flags[i] and caches[i]:
                             assert caches[i].state in [StateHandler.shared(),
                                                              StateHandler.owned()]
                             if caches[i].state == StateHandler.owned():
@@ -111,7 +111,7 @@ class DragonProtocol(CacheProtocol):
                     caches[msg.sender_id].state = StateHandler.modified()
                 else:  # other copies are all in SharedClean state
                     for i in range(self.CPU_NUMS):
-                        if i != msg.sender_id and flags[i]:
+                        if i != msg.sender_id and flags[i] and caches[i]:
                             assert caches[i].state == StateHandler.shared()
                             assert not caches[i].dirty
                     self.cpu_stats[self.CPU_NUMS].add_many("data_traffic", 4 * (cnt - 1))
@@ -134,7 +134,7 @@ class DragonProtocol(CacheProtocol):
 
     def update_for_write(self, has_modified, has_shared_modified, flags, caches, msg):
         for i in range(self.CPU_NUMS):
-            if flags[i]:
+            if flags[i] and caches[i]:
                 if has_modified or has_shared_modified:
                     caches[i].dirty = False
                 if caches[i] is not None:
@@ -148,7 +148,7 @@ class DragonProtocol(CacheProtocol):
 
     def set_all_to_shared_clean(self, flags, caches,  msg,  cnt):
         for i in range(self.CPU_NUMS):
-            if flags[i]:
+            if flags[i] and caches[i]:
                 assert caches[i].state == StateHandler.shared() or caches[i].state == StateHandler.owned()
                 if caches[i].state == StateHandler.shared():
                     assert caches[i].dirty == False
