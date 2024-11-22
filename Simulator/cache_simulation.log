@@ -1,3 +1,23 @@
+Run conf:
+
+Write-Output "===blackscholes==="
+
+python C:\Users\Michalina\cs4223\Assignment2\CacheCoherenceProtocolsSimulator\coherence.py MESI blackscholes 1024 2 16 4
+python C:\Users\Michalina\cs4223\Assignment2\CacheCoherenceProtocolsSimulator\coherence.py Dragon blackscholes 1024 2 16 4
+
+Write-Output "===fluidanimate==="
+
+python C:\Users\Michalina\cs4223\Assignment2\CacheCoherenceProtocolsSimulator\coherence.py MESI fluidanimate 1024 2 16 4
+python C:\Users\Michalina\cs4223\Assignment2\CacheCoherenceProtocolsSimulator\coherence.py Dragon fluidanimate 1024 2 16 4
+
+Write-Output "===bodytrack==="
+
+python C:\Users\Michalina\cs4223\Assignment2\CacheCoherenceProtocolsSimulator\coherence.py MESI bodytrack 1024 2 16 4
+python C:\Users\Michalina\cs4223\Assignment2\CacheCoherenceProtocolsSimulator\coherence.py Dragon bodytrack 1024 2 16 4
+
+
+
+
 ===blackscholes===
 Directory name: blackscholes_four
 === Statistics about CPU 0 ===
