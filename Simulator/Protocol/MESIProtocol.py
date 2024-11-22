@@ -71,8 +71,10 @@ class MESIProtocol(CacheProtocol):
                             caches[i].valid = False
                     assert cnt == 0
                     self.int_to_state_map[msg.sender_id] = StateHandler.modified()
-                    self.cpu_stats[self.CPU_NUMS].add_many('data_traffic', self.CACHE_CONFIG.block_size)
-                    self.cpu_stats[self.CPU_NUMS].increment('invalidation')
+                    self.cpu_stats[self.CPU_NUMS].add_many("data_traffic", self.CACHE_CONFIG.block_size)
+                    self.cpu_stats[self.CPU_NUMS].increment("invalidation")
+
+
                     return self.CACHE_CONFIG.block_size // 2
             else: #READ_REQ
                 if cnt == 0:

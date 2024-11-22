@@ -88,7 +88,9 @@ def main(argv):
             print("Number of Invalidations:", config.CPU_STATS[config.CPU_NUMS].get_count("invalidation"))
         else:
             print("Number of Updates:", config.CPU_STATS[config.CPU_NUMS].get_count("update"))
-
+        private = config.CPU_STATS[config.CPU_NUMS].get_count("private")
+        public = config.CPU_STATS[config.CPU_NUMS].get_count("public")
+        print(f"Private access {private}: public access = {public} ")
         return 0
 
 if __name__ == "__main__":

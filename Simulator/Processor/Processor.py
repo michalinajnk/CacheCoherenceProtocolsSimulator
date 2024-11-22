@@ -40,7 +40,7 @@ class Processor(Observer):
                     if self.current_instruction.identify() == 2:
                         self.halt_cycles = self.current_instruction.get_value()
                         self.halt_cycles -=1
-                        self.config.CPU_STATS[self.id].increment("idle_cycles")
+                        #self.config.CPU_STATS[self.id].increment("idle_cycles")
                         if self.halt_cycles == 0 and self.current_instruction is not None:
                             self.current_instruction.execute(self.cache)
                             self.current_instruction = None
@@ -50,14 +50,14 @@ class Processor(Observer):
                         logging.debug("Processor %s: Parsed address %s from current instruction at cycle %s", self.id,
                                   address, current_cycle)
                         if address in self.currently_processing_instructions:
-                            self.config.CPU_STATS[self.id].increment("idle_cycles")
+                            #self.config.CPU_STATS[self.id].increment("idle_cycles")
                             logging.debug("Processor %s: Address %s is already being processed, incrementing idle_cycles at cycle %s",self.id, address, current_cycle)
                             return True
                         else:
                             self.currently_processing_instructions.add(address)
                             self.halt_cycles = self.current_instruction.detect(self.cache)
                             self.halt_cycles -= 1
-                            self.config.CPU_STATS[self.id].increment("idle_cycles")
+                            #self.config.CPU_STATS[self.id].increment("idle_cycles")
                             logging.debug(
                                 "Processor %s: Detected new instruction, updated halt_cycles to %s, incremented idle_cycles at cycle %s",
                                 self.id, self.halt_cycles, current_cycle)
@@ -84,7 +84,7 @@ class Processor(Observer):
         else:
             with self.instruction_lock:
                 self.halt_cycles -= 1
-                self.config.CPU_STATS[self.id].increment("idle_cycles")
+                #self.config.CPU_STATS[self.id].increment("idle_cycles")
                 logging.debug(
                     "Processor %s: In halt state, decremented halt_cycles to %s, incremented idle_cycles at cycle %s",
                     self.id, self.halt_cycles, current_cycle)
@@ -142,7 +142,7 @@ class Processor(Observer):
                 if address in self.currently_processing_instructions:
                     logging.debug("Address %s is currently being processed; skipping", address)
                     self.halt_cycles = 0
-                    self.config.CPU_STATS[self.id].increment("idle_cycles")
+                    #self.config.CPU_STATS[self.id].increment("idle_cycles")
                     return True
                 logging.info("Adding the address to currently processing addresses %s", address)
                 self.currently_processing_instructions.add(address)
@@ -151,7 +151,7 @@ class Processor(Observer):
                 self.config.CPU_STATS[self.id].add_many("compute_cycles" , fetched_instruction.get_value())
             self.halt_cycles = fetched_instruction.detect(self.cache)
             self.halt_cycles -= 1
-            self.config.CPU_STATS[self.id].increment("idle_cycles")
+            #self.config.CPU_STATS[self.id].increment("idle_cycles")
             if self.halt_cycles == 0 and self.current_instruction is not None:
                 executed = self.current_instruction.execute(self.cache)
                 if self.current_instruction.identify() in [0,1]:

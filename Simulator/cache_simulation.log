@@ -1,0 +1,177 @@
+===blackscholes===
+Directory name: blackscholes_four
+=== Statistics about CPU 0 ===
+Finished at cycle 4980937
+Compute Cycles Number is 110
+Load Number: 11 Store Number: 4
+Idle Cycles Number is 4980827
+Data Cache Miss Rate: 73.33333333333333%
+=== Statistics about CPU 1 ===
+Finished at cycle 4980937
+Compute Cycles Number is 57
+Load Number: 10 Store Number: 12
+Idle Cycles Number is 4980880
+Data Cache Miss Rate: 86.36363636363636%
+=== Statistics about CPU 2 ===
+Finished at cycle 4980936
+Compute Cycles Number is 193
+Load Number: 40 Store Number: 35
+Idle Cycles Number is 4980743
+Data Cache Miss Rate: 92.0%
+=== Statistics about CPU 3 ===
+Finished at cycle 4980936
+Compute Cycles Number is 48
+Load Number: 16 Store Number: 12
+Idle Cycles Number is 4980888
+Data Cache Miss Rate: 92.85714285714286%
+=== Statistics about the Bus ===
+Data Traffic: 0 bytes
+Number of Updates: 0
+Private access 15: public access = 0
+Directory name: blackscholes_four
+=== Statistics about CPU 0 ===
+Finished at cycle 4980937
+Compute Cycles Number is 110
+Load Number: 11 Store Number: 4
+Idle Cycles Number is 4980827
+Data Cache Miss Rate: 73.33333333333333%
+=== Statistics about CPU 1 ===
+Finished at cycle 4980937
+Compute Cycles Number is 57
+Load Number: 10 Store Number: 12
+Idle Cycles Number is 4980880
+Data Cache Miss Rate: 86.36363636363636%
+=== Statistics about CPU 2 ===
+Finished at cycle 4980936
+Compute Cycles Number is 64
+Load Number: 14 Store Number: 12
+Idle Cycles Number is 4980872
+Data Cache Miss Rate: 92.3076923076923%
+=== Statistics about CPU 3 ===
+Finished at cycle 4980936
+Compute Cycles Number is 48
+Load Number: 16 Store Number: 12
+Idle Cycles Number is 4980888
+Data Cache Miss Rate: 92.85714285714286%
+=== Statistics about the Bus ===
+Data Traffic: 0 bytes
+Number of Updates: 0
+Private access 11: public access = 0
+===fluidanimate===
+Directory name: fluidanimate_four
+=== Statistics about CPU 0 ===
+Finished at cycle 207
+Compute Cycles Number is 47
+Load Number: 10 Store Number: 1
+Idle Cycles Number is 160
+Data Cache Miss Rate: 90.9090909090909%
+=== Statistics about CPU 1 ===
+Finished at cycle 207
+Compute Cycles Number is 43
+Load Number: 4 Store Number: 9
+Idle Cycles Number is 164
+Data Cache Miss Rate: 100.0%
+=== Statistics about CPU 2 ===
+Finished at cycle 207
+Compute Cycles Number is 0
+Load Number: 7 Store Number: 6
+Idle Cycles Number is 207
+Data Cache Miss Rate: 100.0%
+=== Statistics about CPU 3 ===
+Finished at cycle 207
+Compute Cycles Number is 16
+Load Number: 5 Store Number: 9
+Idle Cycles Number is 191
+Data Cache Miss Rate: 100.0%
+=== Statistics about the Bus ===
+Data Traffic: 0 bytes
+Number of Updates: 0
+Private access 1: public access = 0
+Directory name: fluidanimate_four
+=== Statistics about CPU 0 ===
+Finished at cycle 207
+Compute Cycles Number is 47
+Load Number: 10 Store Number: 1
+Idle Cycles Number is 160
+Data Cache Miss Rate: 90.9090909090909%
+=== Statistics about CPU 1 ===
+Finished at cycle 207
+Compute Cycles Number is 43
+Load Number: 4 Store Number: 9
+Idle Cycles Number is 164
+Data Cache Miss Rate: 100.0%
+=== Statistics about CPU 2 ===
+Finished at cycle 207
+Compute Cycles Number is 0
+Load Number: 7 Store Number: 6
+Idle Cycles Number is 207
+Data Cache Miss Rate: 100.0%
+=== Statistics about CPU 3 ===
+Finished at cycle 207
+Compute Cycles Number is 16
+Load Number: 5 Store Number: 9
+Idle Cycles Number is 191
+Data Cache Miss Rate: 100.0%
+=== Statistics about the Bus ===
+Data Traffic: 0 bytes
+Number of Updates: 0
+Private access 1: public access = 0
+===bodytrack===
+Directory name: bodytrack_four
+=== Statistics about CPU 0 ===
+Finished at cycle 235397
+Compute Cycles Number is 523
+Load Number: 13 Store Number: 5
+Idle Cycles Number is 234874
+Data Cache Miss Rate: 66.66666666666666%
+=== Statistics about CPU 1 ===
+Finished at cycle 235397
+Compute Cycles Number is 0
+Load Number: 1 Store Number: 4
+Idle Cycles Number is 235397
+Data Cache Miss Rate: 100.0%
+=== Statistics about CPU 2 ===
+Finished at cycle 235397
+Compute Cycles Number is 0
+Load Number: 1 Store Number: 4
+Idle Cycles Number is 235397
+Data Cache Miss Rate: 100.0%
+=== Statistics about CPU 3 ===
+Finished at cycle 235396
+Compute Cycles Number is 0
+Load Number: 1 Store Number: 4
+Idle Cycles Number is 235396
+Data Cache Miss Rate: 100.0%
+=== Statistics about the Bus ===
+Data Traffic: 48 bytes
+Number of Invalidations: 1
+Private access 5: public access = 1
+Directory name: bodytrack_four
+=== Statistics about CPU 0 ===
+Finished at cycle 235397
+Compute Cycles Number is 154
+Load Number: 12 Store Number: 8
+Idle Cycles Number is 235243
+Data Cache Miss Rate: 45.0%
+=== Statistics about CPU 1 ===
+Finished at cycle 235397
+Compute Cycles Number is 0
+Load Number: 1 Store Number: 4
+Idle Cycles Number is 235397
+Data Cache Miss Rate: 100.0%
+=== Statistics about CPU 2 ===
+Finished at cycle 235397
+Compute Cycles Number is 0
+Load Number: 1 Store Number: 4
+Idle Cycles Number is 235397
+Data Cache Miss Rate: 100.0%
+=== Statistics about CPU 3 ===
+Finished at cycle 235396
+Compute Cycles Number is 0
+Load Number: 1 Store Number: 4
+Idle Cycles Number is 235396
+Data Cache Miss Rate: 100.0%
+=== Statistics about the Bus ===
+Data Traffic: 52 bytes
+Number of Updates: 1
+Private access 6: public access = 5

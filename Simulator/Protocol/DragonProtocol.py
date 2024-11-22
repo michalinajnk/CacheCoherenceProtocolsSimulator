@@ -81,7 +81,7 @@ class DragonProtocol(CacheProtocol):
             assert flags[msg.sender_id]
             assert msg.message_type == MessageType.WRITE_REQ
             if caches[msg.sender_id].state == StateHandler.exclusive():
-                # Exclusive to Modified, PrWr/-
+
                 assert cnt == 1
                 caches[msg.sender_id].state = StateHandler.modified()
             elif caches[msg.sender_id].state == StateHandler.shared():
@@ -159,7 +159,7 @@ class DragonProtocol(CacheProtocol):
                 assert caches[i].dirty == False
         self.int_to_state_map[msg.sender_id]  = StateHandler.owned()
         self.cpu_stats[self.CPU_NUMS].increment("update")
-        self.cpu_stats[self.CPU_NUMS].add_many("data_traffic", self.CACHE_CONFIG.block_size + 4 * cnt)
+        self.cpu_stats[self.CPU_NUMS].add_many("data_traffic", self.CACHE_CONFIG.block_size + (4 * cnt))
 
 
 
