@@ -28,6 +28,9 @@ Data Cache Miss Rate: 92.85714285714286%
 Data Traffic: 0 bytes
 Number of Updates: 0
 Private access 15: public access = 0
+
+
+
 Directory name: blackscholes_four
 === Statistics about CPU 0 ===
 Finished at cycle 4980937
@@ -57,6 +60,10 @@ Data Cache Miss Rate: 92.85714285714286%
 Data Traffic: 0 bytes
 Number of Updates: 0
 Private access 11: public access = 0
+
+
+
+
 ===fluidanimate===
 Directory name: fluidanimate_four
 === Statistics about CPU 0 ===
@@ -87,6 +94,7 @@ Data Cache Miss Rate: 100.0%
 Data Traffic: 0 bytes
 Number of Updates: 0
 Private access 1: public access = 0
+
 Directory name: fluidanimate_four
 === Statistics about CPU 0 ===
 Finished at cycle 207
@@ -116,6 +124,9 @@ Data Cache Miss Rate: 100.0%
 Data Traffic: 0 bytes
 Number of Updates: 0
 Private access 1: public access = 0
+
+
+
 ===bodytrack===
 Directory name: bodytrack_four
 === Statistics about CPU 0 ===
@@ -146,6 +157,8 @@ Data Cache Miss Rate: 100.0%
 Data Traffic: 48 bytes
 Number of Invalidations: 1
 Private access 5: public access = 1
+
+
 Directory name: bodytrack_four
 === Statistics about CPU 0 ===
 Finished at cycle 235397
